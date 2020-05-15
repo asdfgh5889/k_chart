@@ -27,7 +27,7 @@ class TimeFormat {
 }
 
 class KChartWidget extends StatefulWidget {
-  final List<KLineEntity> datas;
+  final List<KLineEntity> data;
   final MainState mainState;
   final SecondaryState secondaryState;
   final bool isLine;
@@ -44,7 +44,7 @@ class KChartWidget extends StatefulWidget {
   final Function(bool) isOnDrag;
 
   KChartWidget(
-    this.datas, {
+    this.data, {
     this.mainState = MainState.MA,
     this.secondaryState = SecondaryState.MACD,
     this.isLine,
@@ -100,7 +100,7 @@ class _KChartWidgetState extends State<KChartWidget>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.datas == null || widget.datas.isEmpty) {
+    if (widget.data == null || widget.data.isEmpty) {
       mScrollX = mSelectX = 0.0;
       mScaleX = 1.0;
     }
@@ -155,7 +155,7 @@ class _KChartWidgetState extends State<KChartWidget>
           CustomPaint(
             size: Size(double.infinity, double.infinity),
             painter: ChartPainter(
-                datas: widget.datas,
+                datas: widget.data,
                 scaleX: mScaleX,
                 scrollX: mScrollX,
                 selectX: mSelectX,

@@ -7,16 +7,22 @@ import 'package:k_chart/utils/date_format_util.dart';
 import '../entity/k_line_entity.dart';
 import '../k_chart_widget.dart';
 import '../chart_style.dart' show ChartStyle;
+import 'base_chart_renderer.dart';
+import 'main_renderer.dart';
+import 'vol_renderer.dart';
+import 'secondary_renderer.dart';
+import '../entity/volume_entity.dart';
+import '../entity/macd_entity.dart';
+import '../entity/candle_entity.dart';
 
-enum MainState1 { MA, BOLL, NONE }
-enum SecondaryState1 { MACD, KDJ, RSI, WR, NONE }
+typedef MaxMinValueCalculator(KLineEntity item, int i, SingleBaseChartPainter painter);
 
 abstract class SingleBaseChartPainter extends CustomPainter {
   static double maxScrollX = 0.0;
+  SingleBaseChartState state;
   List<KLineEntity> data;
   double scaleX = 1.0, scrollX = 0.0, selectX;
   bool isLongPress = false;
-  bool isLine = false;
 
   Rect mRect;
   double mDisplayHeight, mWidth;
@@ -33,13 +39,14 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   double mPointWidth = ChartStyle.pointWidth;
   List<String> mFormats = [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn]; //Format time
 
-  SingleBaseChartPainter(
-      {@required this.data,
-        @required this.scaleX,
-        @required this.scrollX,
-        @required this.isLongPress,
-        @required this.selectX,
-        this.isLine}) {
+  SingleBaseChartPainter({
+    @required this.data,
+    @required this.scaleX,
+    @required this.scrollX,
+    @required this.isLongPress,
+    @required this.selectX,
+    @required this.state,
+  }) {
     mItemCount = data?.length ?? 0;
     mDataLen = mItemCount * mPointWidth;
     initFormats();
@@ -124,11 +131,9 @@ abstract class SingleBaseChartPainter extends CustomPainter {
     mStopIndex = indexOfTranslateX(xToTranslateX(mWidth));
     for (int i = mStartIndex; i <= mStopIndex; i++) {
       var item = data[i];
-      getMaxMinValue(item, i);
+      this.state.maxMinValue(item, i, this);
     }
   }
-
-  void getMaxMinValue(KLineEntity item, int i);
 
   double _findMaxMA(List<double> a) {
     double result = double.minPositive;
@@ -223,34 +228,40 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   }
 }
 
-abstract class SingleMainChartPainter extends SingleBaseChartPainter {
+abstract class SingleBaseChartState<T> {
+  MaxMinValueCalculator get maxMinValue;
+
+  BaseChartRenderer<T> getRenderer(Rect rect, double maxValue, double minValue,
+      double topPadding, int fixedLength);
+}
+
+class SingleMainChartState extends SingleBaseChartState<CandleEntity> {
   MainState state;
+  bool isLine;
+  List<int> maDayList;
 
-  SingleMainChartPainter({
-    @required data,
-    @required scaleX,
-    @required scrollX,
-    @required isLongPress,
-    @required selectX,
+  SingleMainChartState({
     this.state = MainState.MA,
-    isLine}): super(
-    data: data,
-    scaleX: scaleX,
-    scrollX: scrollX,
-    isLongPress: isLongPress,
-    selectX: selectX,
-    isLine: isLine,
-  );
+    this.isLine = false,
+    this.maDayList
+  });
 
-  void getMaxMinValue(KLineEntity item, int i) {
+  @override
+  BaseChartRenderer<CandleEntity> getRenderer(Rect rect, double maxValue, double minValue,
+      double topPadding, int fixedLength) {
+    return MainRenderer(rect, maxValue, minValue, topPadding, state, isLine, fixedLength, maDayList);
+  }
+
+  @override
+  MaxMinValueCalculator get maxMinValue => (KLineEntity item, int i, SingleBaseChartPainter painter) {
     if (isLine == true) {
-      mMaxValue = max(mMaxValue, item.close);
-      mMinValue = min(mMinValue, item.close);
+      painter.mMaxValue = max(painter.mMaxValue, item.close);
+      painter.mMinValue = min(painter.mMinValue, item.close);
     } else {
       double maxPrice, minPrice;
       if (state == MainState.MA) {
-        maxPrice = max(item.high, _findMaxMA(item.maValueList));
-        minPrice = min(item.low, _findMinMA(item.maValueList));
+        maxPrice = max(item.high, painter._findMaxMA(item.maValueList));
+        minPrice = min(item.low, painter._findMinMA(item.maValueList));
       } else if (state == MainState.BOLL) {
         maxPrice = max(item.up ?? 0, item.high);
         minPrice = min(item.dn ?? 0, item.low);
@@ -258,86 +269,65 @@ abstract class SingleMainChartPainter extends SingleBaseChartPainter {
         maxPrice = item.high;
         minPrice = item.low;
       }
-      mMaxValue = max(mMaxValue, maxPrice);
-      mMinValue = min(mMinValue, minPrice);
+      painter.mMaxValue = max(painter.mMaxValue, maxPrice);
+      painter.mMinValue = min(painter.mMinValue, minPrice);
 
-      if (mHighMaxValue < item.high) {
-        mHighMaxValue = item.high;
-        mMaxIndex = i;
+      if (painter.mHighMaxValue < item.high) {
+        painter.mHighMaxValue = item.high;
+        painter.mMaxIndex = i;
       }
-      if (mLowMinValue > item.low) {
-        mLowMinValue = item.low;
-        mMinIndex = i;
+      if (painter.mLowMinValue > item.low) {
+        painter.mLowMinValue = item.low;
+        painter.mMinIndex = i;
       }
     }
-  }
+  };
 }
 
-abstract class SingleSecondaryChartPainter extends SingleBaseChartPainter {
+class SingleSecondaryChartState extends SingleBaseChartState<MACDEntity> {
   SecondaryState state;
 
-  SingleSecondaryChartPainter({
-    @required data,
-    @required scaleX,
-    @required scrollX,
-    @required isLongPress,
-    @required selectX,
-    this.state = SecondaryState.MACD,
-  }): super(
-    data: data,
-    scaleX: scaleX,
-    scrollX: scrollX,
-    isLongPress: isLongPress,
-    selectX: selectX,
-  );
+  SingleSecondaryChartState({this.state = SecondaryState.MACD});
 
-  void getMaxMinValue(KLineEntity item, int i) {
+  @override
+  BaseChartRenderer<MACDEntity> getRenderer(Rect rect, double maxValue, double minValue,
+      double topPadding, int fixedLength) {
+    return SecondaryRenderer(rect, maxValue, minValue, topPadding, state, fixedLength);
+  }
+
+  MaxMinValueCalculator get maxMinValue => (KLineEntity item, int i, SingleBaseChartPainter painter) {
     if (state == SecondaryState.MACD) {
-      mMaxValue =
-          max(mMaxValue, max(item.macd, max(item.dif, item.dea)));
-      mMinValue =
-          min(mMinValue, min(item.macd, min(item.dif, item.dea)));
+      painter.mMaxValue = max(painter.mMaxValue, max(item.macd, max(item.dif, item.dea)));
+      painter.mMinValue = min(painter.mMinValue, min(item.macd, min(item.dif, item.dea)));
     } else if (state == SecondaryState.KDJ) {
       if (item.d != null) {
-        mMaxValue =
-            max(mMaxValue, max(item.k, max(item.d, item.j)));
-        mMinValue =
-            min(mMinValue, min(item.k, min(item.d, item.j)));
+        painter.mMaxValue = max(painter.mMaxValue, max(item.k, max(item.d, item.j)));
+        painter.mMinValue = min(painter.mMinValue, min(item.k, min(item.d, item.j)));
       }
     } else if (state == SecondaryState.RSI) {
       if (item.rsi != null) {
-        mMaxValue = max(mMaxValue, item.rsi);
-        mMinValue = min(mMinValue, item.rsi);
+        painter.mMaxValue = max(painter.mMaxValue, item.rsi);
+        painter.mMinValue = min(painter.mMinValue, item.rsi);
       }
     } else if (state == SecondaryState.WR) {
-      mMaxValue = 0;
-      mMinValue = -100;
+      painter.mMaxValue = 0;
+      painter.mMinValue = -100;
     } else {
-      mMaxValue = 0;
-      mMinValue = 0;
+      painter.mMaxValue = 0;
+      painter.mMinValue = 0;
     }
-  }
+  };
 }
 
-abstract class SingleVolChartPainter extends SingleBaseChartPainter {
-  SingleVolChartPainter({
-    @required data,
-    @required scaleX,
-    @required scrollX,
-    @required isLongPress,
-    @required selectX
-  }): super(
-    data: data,
-    scaleX: scaleX,
-    scrollX: scrollX,
-    isLongPress: isLongPress,
-    selectX: selectX,
-  );
-
-  void getMaxMinValue(KLineEntity item, int i) {
-    mMaxValue = max(mMaxValue,
-        max(item.vol, max(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
-    mMinValue = min(mMinValue,
-        min(item.vol, min(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
+class SingleVolChartState extends SingleBaseChartState<VolumeEntity> {
+  @override
+  BaseChartRenderer<VolumeEntity> getRenderer(Rect rect, double maxValue, double minValue,
+      double topPadding, int fixedLength) {
+    return VolRenderer(rect, maxValue, minValue, topPadding, fixedLength);
   }
+
+  MaxMinValueCalculator get maxMinValue => (KLineEntity item, int i, SingleBaseChartPainter painter) {
+    painter.mMaxValue = max(painter.mMaxValue, max(item.vol, max(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
+    painter.mMinValue = min(painter.mMinValue, min(item.vol, min(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
+  };
 }
