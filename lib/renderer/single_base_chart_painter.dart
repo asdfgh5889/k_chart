@@ -193,8 +193,10 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   }
 
   ///scrollX 转换为 TranslateX
-  void setTranslateXFromScrollX(double scrollX) =>
-      mTranslateX = scrollX + getMinTranslateX();
+  void setTranslateXFromScrollX(double scrollX) {
+    mTranslateX = scrollX + getMinTranslateX();
+    print("$scrollX   $mTranslateX");
+  }
 
   ///获取平移的最小值
   double getMinTranslateX() {
@@ -230,24 +232,28 @@ abstract class SingleBaseChartPainter extends CustomPainter {
 
 abstract class SingleBaseChartState<T> {
   MaxMinValueCalculator get maxMinValue;
+  Size get size;
 
   BaseChartRenderer<T> getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength);
 }
 
-class SingleMainChartState extends SingleBaseChartState<CandleEntity> {
+class SingleMainChartState extends SingleBaseChartState {
   MainState state;
   bool isLine;
   List<int> maDayList;
+  final Size _size;
+  Size get size => this._size ?? Size(double.infinity, 300);
 
   SingleMainChartState({
     this.state = MainState.MA,
     this.isLine = false,
-    this.maDayList
-  });
+    this.maDayList = const [5, 10, 20],
+    Size size
+  }): this._size = size;
 
   @override
-  BaseChartRenderer<CandleEntity> getRenderer(Rect rect, double maxValue, double minValue,
+  BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength) {
     return MainRenderer(rect, maxValue, minValue, topPadding, state, isLine, fixedLength, maDayList);
   }
@@ -284,13 +290,18 @@ class SingleMainChartState extends SingleBaseChartState<CandleEntity> {
   };
 }
 
-class SingleSecondaryChartState extends SingleBaseChartState<MACDEntity> {
+class SingleSecondaryChartState extends SingleBaseChartState {
   SecondaryState state;
+  final Size _size;
+  Size get size => this._size ?? Size(double.infinity, 150);
 
-  SingleSecondaryChartState({this.state = SecondaryState.MACD});
+  SingleSecondaryChartState({
+    this.state = SecondaryState.MACD,
+    Size size,
+  }): _size = size;
 
   @override
-  BaseChartRenderer<MACDEntity> getRenderer(Rect rect, double maxValue, double minValue,
+  BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength) {
     return SecondaryRenderer(rect, maxValue, minValue, topPadding, state, fixedLength);
   }
@@ -319,9 +330,14 @@ class SingleSecondaryChartState extends SingleBaseChartState<MACDEntity> {
   };
 }
 
-class SingleVolChartState extends SingleBaseChartState<VolumeEntity> {
+class SingleVolChartState extends SingleBaseChartState {
+  final Size _size;
+  Size get size => this._size ?? Size(double.infinity, 150);
+
+  SingleVolChartState({Size size}): _size = size;
+
   @override
-  BaseChartRenderer<VolumeEntity> getRenderer(Rect rect, double maxValue, double minValue,
+  BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength) {
     return VolRenderer(rect, maxValue, minValue, topPadding, fixedLength);
   }

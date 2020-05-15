@@ -25,7 +25,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
     @required scrollX,
     @required isLongPass,
     @required selectX,
-    state,
+    @required state,
     this.sink,
     this.bgColor,
     this.fixedLength,

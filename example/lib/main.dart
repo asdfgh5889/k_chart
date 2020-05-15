@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:k_chart/chart_container.dart';
 import 'package:k_chart/flutter_k_chart.dart';
 import 'package:k_chart/k_chart_widget.dart';
 import 'package:http/http.dart' as http;
+import 'package:k_chart/renderer/single_base_chart_painter.dart';
 
 void main() => runApp(MyApp());
 
@@ -86,38 +88,54 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff17212F),
-//      appBar: AppBar(title: Text(widget.title)),
-      body: ListView(
-        children: <Widget>[
-          Stack(children: <Widget>[
-            Container(
-              height: 450,
-              width: double.infinity,
-              child: KChartWidget(
-                datas,
-                isLine: isLine,
-                mainState: _mainState,
-                secondaryState: _secondaryState,
-                fixedLength: 2,
-                timeFormat: TimeFormat.YEAR_MONTH_DAY,
-                isChinese: isChinese,
-              ),
-            ),
-            if (showLoading)
-              Container(
-                  width: double.infinity,
-                  height: 450,
-                  alignment: Alignment.center,
-                  child: CircularProgressIndicator()),
-          ]),
-          buildButtons(),
-          Container(
-            height: 230,
-            width: double.infinity,
-            child: DepthChart(_bids, _asks),
-          )
-        ],
+      body: SafeArea(
+        child: ChartContainer(
+          datas,
+          fixedLength: 2,
+          timeFormat: TimeFormat.YEAR_MONTH_DAY,
+          states: [
+            SingleMainChartState(),
+            SingleSecondaryChartState(state: SecondaryState.MACD),
+            SingleSecondaryChartState(state: SecondaryState.KDJ),
+            SingleSecondaryChartState(state: SecondaryState.RSI),
+            SingleSecondaryChartState(state: SecondaryState.WR),
+          ],
+        ),
       ),
+//      body: ListView(
+//        children: <Widget>[
+//          Stack(children: <Widget>[
+//            Container(
+//              height: 450,
+//              width: double.infinity,
+//              child: ChartContainer(
+//                datas,
+//                fixedLength: 2,
+//                timeFormat: TimeFormat.YEAR_MONTH_DAY,
+//                states: [
+//                  SingleMainChartState(),
+//                  SingleSecondaryChartState(state: SecondaryState.MACD),
+//                  SingleSecondaryChartState(state: SecondaryState.KDJ),
+//                  SingleSecondaryChartState(state: SecondaryState.RSI),
+//                  SingleSecondaryChartState(state: SecondaryState.WR),
+//                ],
+//              ),
+//            ),
+//            if (showLoading)
+//              Container(
+//                  width: double.infinity,
+//                  height: 450,
+//                  alignment: Alignment.center,
+//                  child: CircularProgressIndicator()),
+//          ]),
+//          buildButtons(),
+//          Container(
+//            height: 230,
+//            width: double.infinity,
+//            child: DepthChart(_bids, _asks),
+//          )
+//        ],
+//      ),
     );
   }
 
