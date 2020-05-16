@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:k_chart/chart_container.dart';
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        primarySwatch: Colors.blueGrey,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -33,12 +34,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<KLineEntity> datas;
+  List<KLineEntity> data;
   bool showLoading = true;
-  MainState _mainState = MainState.MA;
-  SecondaryState _secondaryState = SecondaryState.MACD;
   bool isLine = true;
-  bool isChinese = true;
+  bool reorder = false;
   List<DepthEntity> _bids, _asks;
 
   @override
@@ -66,7 +65,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _asks = List();
     double amount = 0.0;
     bids?.sort((left, right) => left.price.compareTo(right.price));
-    //累加买入委托量
     bids.reversed.forEach((item) {
       amount += item.vol;
       item.vol = amount;
@@ -75,7 +73,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     amount = 0.0;
     asks?.sort((left, right) => left.price.compareTo(right.price));
-    //累加卖出委托量
     asks?.forEach((item) {
       amount += item.vol;
       item.vol = amount;
@@ -88,73 +85,35 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff17212F),
+      appBar: AppBar(
+        actions: <Widget>[
+          FlatButton(
+            onPressed: () {
+              setState(() {
+                this.reorder = !this.reorder;
+              });
+            },
+            child: Text("Reorder"),
+          )
+        ],
+      ),
       body: SafeArea(
         child: ChartContainer(
-          datas,
+          data,
+          key: Key("chart_container"),
+          orderMode: this.reorder,
           fixedLength: 2,
           timeFormat: TimeFormat.YEAR_MONTH_DAY,
           states: [
             SingleMainChartState(),
-            SingleSecondaryChartState(state: SecondaryState.MACD),
+            SingleVolChartState(),
+            SingleSecondaryChartState(state: SecondaryState.MACD,),
             SingleSecondaryChartState(state: SecondaryState.KDJ),
             SingleSecondaryChartState(state: SecondaryState.RSI),
             SingleSecondaryChartState(state: SecondaryState.WR),
           ],
         ),
       ),
-//      body: ListView(
-//        children: <Widget>[
-//          Stack(children: <Widget>[
-//            Container(
-//              height: 450,
-//              width: double.infinity,
-//              child: ChartContainer(
-//                datas,
-//                fixedLength: 2,
-//                timeFormat: TimeFormat.YEAR_MONTH_DAY,
-//                states: [
-//                  SingleMainChartState(),
-//                  SingleSecondaryChartState(state: SecondaryState.MACD),
-//                  SingleSecondaryChartState(state: SecondaryState.KDJ),
-//                  SingleSecondaryChartState(state: SecondaryState.RSI),
-//                  SingleSecondaryChartState(state: SecondaryState.WR),
-//                ],
-//              ),
-//            ),
-//            if (showLoading)
-//              Container(
-//                  width: double.infinity,
-//                  height: 450,
-//                  alignment: Alignment.center,
-//                  child: CircularProgressIndicator()),
-//          ]),
-//          buildButtons(),
-//          Container(
-//            height: 230,
-//            width: double.infinity,
-//            child: DepthChart(_bids, _asks),
-//          )
-//        ],
-//      ),
-    );
-  }
-
-  Widget buildButtons() {
-    return Wrap(
-      alignment: WrapAlignment.spaceEvenly,
-      children: <Widget>[
-        button("分时", onPressed: () => isLine = true),
-        button("k线", onPressed: () => isLine = false),
-        button("MA", onPressed: () => _mainState = MainState.MA),
-        button("BOLL", onPressed: () => _mainState = MainState.BOLL),
-        button("隐藏", onPressed: () => _mainState = MainState.NONE),
-        button("MACD", onPressed: () => _secondaryState = SecondaryState.MACD),
-        button("KDJ", onPressed: () => _secondaryState = SecondaryState.KDJ),
-        button("RSI", onPressed: () => _secondaryState = SecondaryState.RSI),
-        button("WR", onPressed: () => _secondaryState = SecondaryState.WR),
-        button("隐藏副视图", onPressed: () => _secondaryState = SecondaryState.NONE),
-        button("切换中英文", onPressed: () => isChinese = !isChinese),
-      ],
     );
   }
 
@@ -175,23 +134,21 @@ class _MyHomePageState extends State<MyHomePage> {
     future.then((result) {
       Map parseJson = json.decode(result);
       List list = parseJson['data'];
-      datas = list
+      data = list
           .map((item) => KLineEntity.fromJson(item))
           .toList()
           .reversed
           .toList()
           .cast<KLineEntity>();
-      DataUtil.calculate(datas);
+      DataUtil.calculate(data);
       showLoading = false;
       setState(() {});
     }).catchError((_) {
       showLoading = false;
       setState(() {});
-      print('获取数据失败');
     });
   }
 
-  //获取火币数据，需要翻墙
   Future<String> getIPAddress(String period) async {
     var url =
         'https://api.huobi.br.com/market/history/kline?period=${period ?? '1day'}&size=300&symbol=btcusdt';

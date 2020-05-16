@@ -22,9 +22,11 @@ class ChartContainer extends StatefulWidget {
   final double flingRatio;
   final Curve flingCurve;
   final Function(bool) isOnDrag;
+  final bool orderMode;
 
   ChartContainer(
       this.data, {
+        Key key,
         this.states,
         this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
         this.onLoadMore,
@@ -34,7 +36,8 @@ class ChartContainer extends StatefulWidget {
         this.flingRatio = 0.5,
         this.flingCurve = Curves.decelerate,
         this.isOnDrag,
-      });
+        this.orderMode = false
+      }): super(key: key);
 
   @override
   _ChartContainerState createState() => _ChartContainerState();
@@ -42,7 +45,8 @@ class ChartContainer extends StatefulWidget {
 
 class _ChartContainerState extends State<ChartContainer>
     with TickerProviderStateMixin {
-  List<SingleBaseChartState> states;
+  Map<Key, SingleBaseChartState> states;
+  List<Key> _order;
   double mScaleX = 1.0, mScrollX = 0.0, mSelectX = 0.0;
   StreamController<InfoWindowEntity> mInfoWindowStream;
   double mWidth = 0;
@@ -59,7 +63,11 @@ class _ChartContainerState extends State<ChartContainer>
   @override
   void initState() {
     super.initState();
-    this.states = this.widget.states;
+    this._order = List.generate(this.widget.states.length, (i) => UniqueKey());
+    this.states = Map();
+    for (int i = 0; i < this.widget.states.length; i++) {
+      this.states[this._order[i]] = this.widget.states[i];
+    }
     mInfoWindowStream = StreamController<InfoWindowEntity>();
   }
 
@@ -128,43 +136,86 @@ class _ChartContainerState extends State<ChartContainer>
         mInfoWindowStream?.sink?.add(null);
         notifyChanged();
       },
-      child: ListView(
-        children: this.states.map((e) => CustomPaint(
-          size: e.size,
-          painter: SingleChartPainter(
-            state: e,
-            data: widget.data,
-            scaleX: mScaleX,
-            scrollX: mScrollX,
-            selectX: mSelectX,
-            isLongPass: isLongPress,
-            sink: mInfoWindowStream?.sink,
-            bgColor: widget.bgColor,
-            fixedLength: widget.fixedLength,
-          ),
+      child: _buildChartList(context),
+    );
+  }
+
+  Widget _buildChartList(BuildContext context) {
+    if (this.widget.orderMode) {
+      return ReorderableListView(
+        scrollDirection: Axis.vertical,
+        padding: EdgeInsets.all(0),
+        onReorder: (int oldIndex, int newIndex) {
+          if (newIndex > oldIndex) {
+            newIndex -= 1;
+          }
+          final Key item = this._order.removeAt(oldIndex);
+          this._order.insert(newIndex, item);
+          setState(() {
+          });
+        },
+        children: this._order.map((k) => _buildReorderableChart(k)).toList(),
+      );
+    } else {
+      return ListView(
+        scrollDirection: Axis.vertical,
+        padding: EdgeInsets.all(0),
+        children: this._order.map((k) => Container(
+          key: Key(k.toString()),
+          color: ChartColors.lineFillColor,
+          padding: EdgeInsets.symmetric(vertical: 1),
+          child: _buildSingleChart(k),
         )).toList(),
+      );
+    }
+  }
+
+  Widget _buildReorderableChart(Key k) {
+    return SizedBox(
+      key: Key(k.toString()),
+      height: this.states[k].size.height,
+      child: Container(
+        color: ChartColors.lineFillColor,
+        padding: EdgeInsets.symmetric(vertical: 1),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            SizedBox(
+              width: 40,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black45,
+                ),
+                child: Icon(Icons.reorder, color: Colors.white,),
+              ),
+            ),
+            Expanded(
+              child: ClipRRect(
+                child: _buildSingleChart(k),
+              ),
+            ),
+          ],
+        ),
       ),
-//      child: Stack(
-//        children: <Widget>[
-//          CustomPaint(
-//            size: Size(double.infinity, double.infinity),
-//            painter: ChartPainter(
-//                datas: widget.data,
-//                scaleX: mScaleX,
-//                scrollX: mScrollX,
-//                selectX: mSelectX,
-//                isLongPass: isLongPress,
-//                mainState: widget.mainState,
-//                secondaryState: widget.secondaryState,
-//                isLine: widget.isLine,
-//                sink: mInfoWindowStream?.sink,
-//                bgColor: widget.bgColor,
-//                fixedLength: widget.fixedLength,
-//                maDayList: widget.maDayList),
-//          ),
-//          _buildInfoDialog()
-//        ],
-//      ),
+    );
+  }
+
+  Widget _buildSingleChart(Key k) {
+    return  CustomPaint(
+      key: Key(k.toString()),
+      size: this.states[k].size,
+      painter: SingleChartPainter(
+        state: this.states[k],
+        data: widget.data,
+        scaleX: mScaleX,
+        scrollX: mScrollX,
+        selectX: mSelectX,
+        isLongPass: isLongPress,
+        sink: mInfoWindowStream?.sink,
+        bgColor: widget.bgColor,
+        fixedLength: widget.fixedLength,
+      ),
     );
   }
 

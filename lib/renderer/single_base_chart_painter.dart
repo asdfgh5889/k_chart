@@ -195,7 +195,6 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   ///scrollX 转换为 TranslateX
   void setTranslateXFromScrollX(double scrollX) {
     mTranslateX = scrollX + getMinTranslateX();
-    print("$scrollX   $mTranslateX");
   }
 
   ///获取平移的最小值
@@ -233,6 +232,7 @@ abstract class SingleBaseChartPainter extends CustomPainter {
 abstract class SingleBaseChartState<T> {
   MaxMinValueCalculator get maxMinValue;
   Size get size;
+  set size(Size s);
 
   BaseChartRenderer<T> getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength);
@@ -242,8 +242,11 @@ class SingleMainChartState extends SingleBaseChartState {
   MainState state;
   bool isLine;
   List<int> maDayList;
-  final Size _size;
+  Size _size;
+  @override
   Size get size => this._size ?? Size(double.infinity, 300);
+  @override
+  set size(Size s) => this._size = s;
 
   SingleMainChartState({
     this.state = MainState.MA,
@@ -292,8 +295,10 @@ class SingleMainChartState extends SingleBaseChartState {
 
 class SingleSecondaryChartState extends SingleBaseChartState {
   SecondaryState state;
-  final Size _size;
+  Size _size;
   Size get size => this._size ?? Size(double.infinity, 150);
+  @override
+  set size(Size s) => this._size = s;
 
   SingleSecondaryChartState({
     this.state = SecondaryState.MACD,
@@ -331,8 +336,10 @@ class SingleSecondaryChartState extends SingleBaseChartState {
 }
 
 class SingleVolChartState extends SingleBaseChartState {
-  final Size _size;
+  Size _size;
   Size get size => this._size ?? Size(double.infinity, 150);
+  @override
+  set size(Size s) => this._size = s;
 
   SingleVolChartState({Size size}): _size = size;
 
