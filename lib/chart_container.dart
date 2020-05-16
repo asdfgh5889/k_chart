@@ -23,21 +23,24 @@ class ChartContainer extends StatefulWidget {
   final Curve flingCurve;
   final Function(bool) isOnDrag;
   final bool orderMode;
+  final bool resizeMode;
+  final Color dividerColor;
 
-  ChartContainer(
-      this.data, {
-        Key key,
-        this.states,
-        this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
-        this.onLoadMore,
-        this.bgColor,
-        this.fixedLength,
-        this.flingTime = 600,
-        this.flingRatio = 0.5,
-        this.flingCurve = Curves.decelerate,
-        this.isOnDrag,
-        this.orderMode = false
-      }): super(key: key);
+  ChartContainer(this.data, {
+    Key key,
+    this.states,
+    this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
+    this.onLoadMore,
+    this.bgColor,
+    this.fixedLength,
+    this.flingTime = 600,
+    this.flingRatio = 0.5,
+    this.flingCurve = Curves.decelerate,
+    this.isOnDrag,
+    this.dividerColor = ChartColors.lineFillColor,
+    this.orderMode = false,
+    this.resizeMode = false
+  }): super(key: key);
 
   @override
   _ChartContainerState createState() => _ChartContainerState();
@@ -156,13 +159,19 @@ class _ChartContainerState extends State<ChartContainer>
         },
         children: this._order.map((k) => _buildReorderableChart(k)).toList(),
       );
+    } else if (this.widget.resizeMode) {
+      return ListView(
+        scrollDirection: Axis.vertical,
+        padding: EdgeInsets.all(0),
+        children: this._order.map((k) => _buildResizableChart(k)).toList(),
+      );
     } else {
       return ListView(
         scrollDirection: Axis.vertical,
         padding: EdgeInsets.all(0),
         children: this._order.map((k) => Container(
           key: Key(k.toString()),
-          color: ChartColors.lineFillColor,
+          color: this.widget.dividerColor,
           padding: EdgeInsets.symmetric(vertical: 1),
           child: _buildSingleChart(k),
         )).toList(),
@@ -170,12 +179,60 @@ class _ChartContainerState extends State<ChartContainer>
     }
   }
 
+  double _resizeHeight;
+  Widget _buildResizableChart(Key k) {
+    return Container(
+      key: Key(k.toString()),
+      color: Colors.white,
+      padding: EdgeInsets.all(2),
+      child: ClipRRect(
+        child: Stack(
+          children: <Widget>[
+            CustomPaint(
+              size: this.states[k].size,
+              painter: SingleChartPainter(
+                state: this.states[k],
+                data: widget.data,
+                scaleX: mScaleX,
+                scrollX: mScrollX,
+                selectX: mSelectX,
+                isLongPass: isLongPress,
+                sink: mInfoWindowStream?.sink,
+                bgColor: widget.bgColor,
+                fixedLength: widget.fixedLength,
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              child: GestureDetector(
+                onLongPressStart: (touch) {
+                  _resizeHeight = this.states[k].size.height;
+                },
+                onLongPressMoveUpdate: (touch) {
+                  setState(() {
+                    this.states[k].size = Size.fromHeight(_resizeHeight + touch.localOffsetFromOrigin.dy);
+                  });
+                },
+                child: SizedBox(
+                  height: 50,
+                  width: 50,
+                  child: Icon(Icons.unfold_more, color: Colors.white,),
+                ),
+              )
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildReorderableChart(Key k) {
     return SizedBox(
       key: Key(k.toString()),
       height: this.states[k].size.height,
       child: Container(
-        color: ChartColors.lineFillColor,
+        color: this.widget.dividerColor,
         padding: EdgeInsets.symmetric(vertical: 1),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -202,7 +259,7 @@ class _ChartContainerState extends State<ChartContainer>
   }
 
   Widget _buildSingleChart(Key k) {
-    return  CustomPaint(
+    return CustomPaint(
       key: Key(k.toString()),
       size: this.states[k].size,
       painter: SingleChartPainter(

@@ -38,6 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool showLoading = true;
   bool isLine = true;
   bool reorder = false;
+  bool resize = false;
   List<DepthEntity> _bids, _asks;
 
   @override
@@ -94,7 +95,15 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             },
             child: Text("Reorder"),
-          )
+          ),
+          FlatButton(
+            onPressed: () {
+              setState(() {
+                this.resize = !this.resize;
+              });
+            },
+            child: Text("Resize"),
+          ),
         ],
       ),
       body: SafeArea(
@@ -102,6 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
           data,
           key: Key("chart_container"),
           orderMode: this.reorder,
+          resizeMode: this.resize,
           fixedLength: 2,
           timeFormat: TimeFormat.YEAR_MONTH_DAY,
           states: [
