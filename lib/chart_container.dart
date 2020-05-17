@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:k_chart/flutter_k_chart.dart';
 import 'package:reorderables/reorderables.dart';
 import 'chart_style.dart';
@@ -38,7 +39,7 @@ class ChartContainer extends StatefulWidget {
     this.flingRatio = 0.5,
     this.flingCurve = Curves.decelerate,
     this.isOnDrag,
-    this.dividerColor = ChartColors.lineFillColor,
+    this.dividerColor = const Color(0xff2D4158),
     this.orderMode = false,
     this.resizeMode = false
   }): super(key: key);
@@ -179,7 +180,7 @@ class _ChartContainerState extends State<ChartContainer>
   Widget _buildResizableChart(Key k) {
     return Container(
       key: Key(k.toString()),
-      color: Colors.white,
+      color: this.widget.dividerColor,
       padding: EdgeInsets.all(2),
       child: ClipRRect(
         child: Stack(
@@ -204,15 +205,19 @@ class _ChartContainerState extends State<ChartContainer>
               child: GestureDetector(
                 onLongPressStart: (touch) {
                   _resizeHeight = this.states[k].size.height;
+                  HapticFeedback.selectionClick();
                 },
                 onLongPressMoveUpdate: (touch) {
                   setState(() {
                     this.states[k].size = Size.fromHeight(_resizeHeight + touch.localOffsetFromOrigin.dy);
                   });
                 },
-                child: SizedBox(
-                  height: 50,
-                  width: 50,
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: this.widget.dividerColor,
+                  ),
                   child: Icon(Icons.unfold_more, color: Colors.white,),
                 ),
               )
