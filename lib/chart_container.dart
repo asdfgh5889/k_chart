@@ -147,17 +147,20 @@ class _ChartContainerState extends State<ChartContainer>
   Widget _buildChartList(BuildContext context) {
     if (this.widget.orderMode) {
       return ReorderableColumn(
+        key: PageStorageKey("chart_list"),
         onReorder: this.widget.onReorder,
         children: this.widget.order.map((k) => _buildReorderableChart(k)).toList(),
       );
     } else if (this.widget.resizeMode) {
       return ListView(
+        key: PageStorageKey("chart_list"),
         scrollDirection: Axis.vertical,
         padding: EdgeInsets.all(0),
         children: this.widget.order.map((k) => _buildResizableChart(k)).toList(),
       );
     } else {
       return ListView(
+        key: PageStorageKey("chart_list"),
         scrollDirection: Axis.vertical,
         padding: EdgeInsets.all(0),
         children: this.widget.order.map((k) => _buildSingleChart(k)).toList(),
