@@ -36,7 +36,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<KLineEntity> data;
   bool showLoading = true;
-  bool isLine = true;
+  bool changeKey = true;
   bool reorder = false;
   bool resize = false;
   bool line = false;
@@ -107,6 +107,14 @@ class _MyHomePageState extends State<MyHomePage> {
           FlatButton(
             onPressed: () {
               setState(() {
+                this.changeKey = !changeKey;
+              });
+            },
+            child: Text("Rebuild"),
+          ),
+          FlatButton(
+            onPressed: () {
+              setState(() {
                 this.reorder = !this.reorder;
               });
             },
@@ -144,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: ChartContainer(
           data,
-          key: Key("chart_container"),
+          key: Key("chart_container $changeKey"),
           orderMode: this.reorder,
           resizeMode: this.resize,
           fixedLength: 2,

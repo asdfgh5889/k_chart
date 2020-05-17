@@ -61,6 +61,7 @@ class _ChartContainerState extends State<ChartContainer>
   double mWidth = 0;
   AnimationController _controller;
   Animation<double> aniX;
+  final PageStorageBucket _bucket = PageStorageBucket();
 
   double getMinScrollX() {
     return mScaleX;
@@ -140,7 +141,10 @@ class _ChartContainerState extends State<ChartContainer>
         mInfoWindowStream?.sink?.add(null);
         notifyChanged();
       },
-      child: _buildChartList(context),
+      child: PageStorage(
+        bucket: this._bucket,
+        child: _buildChartList(context)
+      ),
     );
   }
 
@@ -398,4 +402,9 @@ class _ChartContainerState extends State<ChartContainer>
 
   String getDate(int date) =>
       dateFormat(DateTime.fromMillisecondsSinceEpoch(date), widget.timeFormat);
+
+  @override
+  void deactivate() {
+    super.deactivate();
+  }
 }
