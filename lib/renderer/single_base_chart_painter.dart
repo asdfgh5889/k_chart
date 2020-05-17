@@ -259,6 +259,18 @@ class SingleMainChartState extends SingleBaseChartState {
     Size size
   }): this._size = size;
 
+  SingleMainChartState copyWith({
+    bool isLine,
+    MainState state,
+    List<int> maDayList,
+    Size size
+  }) => SingleMainChartState(
+    isLine: isLine ?? this.isLine,
+    size: size ?? this._size,
+    state: state ?? this.state,
+    maDayList: maDayList ?? this.maDayList
+  );
+
   @override
   BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength) {

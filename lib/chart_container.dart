@@ -15,8 +15,11 @@ import 'renderer/single_base_chart_painter.dart';
 class ChartContainer extends StatefulWidget {
   final List<KLineEntity> data;
   final List<String> timeFormat;
-  final List<SingleBaseChartState> states;
+  final Map<Key, SingleBaseChartState> states;
+  final List<Key> order;
 
+  final Function(int oldIndex, int newIndex) onReorder;
+  final Function(Key k, double oldHeight, double newHright) onResize;
   final Function(bool) onLoadMore;
   final List<Color> bgColor;
   final int fixedLength;
@@ -31,6 +34,9 @@ class ChartContainer extends StatefulWidget {
   ChartContainer(this.data, {
     Key key,
     this.states,
+    this.order,
+    this.onReorder,
+    this.onResize,
     this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
     this.onLoadMore,
     this.bgColor,
@@ -50,8 +56,6 @@ class ChartContainer extends StatefulWidget {
 
 class _ChartContainerState extends State<ChartContainer>
     with TickerProviderStateMixin {
-  Map<Key, SingleBaseChartState> states;
-  List<Key> _order;
   double mScaleX = 1.0, mScrollX = 0.0, mSelectX = 0.0;
   StreamController<InfoWindowEntity> mInfoWindowStream;
   double mWidth = 0;
@@ -68,11 +72,6 @@ class _ChartContainerState extends State<ChartContainer>
   @override
   void initState() {
     super.initState();
-    this._order = List.generate(this.widget.states.length, (i) => UniqueKey());
-    this.states = Map();
-    for (int i = 0; i < this.widget.states.length; i++) {
-      this.states[this._order[i]] = this.widget.states[i];
-    }
     mInfoWindowStream = StreamController<InfoWindowEntity>();
   }
 
@@ -148,25 +147,20 @@ class _ChartContainerState extends State<ChartContainer>
   Widget _buildChartList(BuildContext context) {
     if (this.widget.orderMode) {
       return ReorderableColumn(
-        onReorder: (int oldIndex, int newIndex) {
-          final Key item = this._order.removeAt(oldIndex);
-          this._order.insert(newIndex, item);
-          setState(() {
-          });
-        },
-        children: this._order.map((k) => _buildReorderableChart(k)).toList(),
+        onReorder: this.widget.onReorder,
+        children: this.widget.order.map((k) => _buildReorderableChart(k)).toList(),
       );
     } else if (this.widget.resizeMode) {
       return ListView(
         scrollDirection: Axis.vertical,
         padding: EdgeInsets.all(0),
-        children: this._order.map((k) => _buildResizableChart(k)).toList(),
+        children: this.widget.order.map((k) => _buildResizableChart(k)).toList(),
       );
     } else {
       return ListView(
         scrollDirection: Axis.vertical,
         padding: EdgeInsets.all(0),
-        children: this._order.map((k) => _buildSingleChart(k)).toList(),
+        children: this.widget.order.map((k) => _buildSingleChart(k)).toList(),
       );
     }
   }
@@ -183,13 +177,12 @@ class _ChartContainerState extends State<ChartContainer>
               left: 0,
               child: GestureDetector(
                 onLongPressStart: (touch) {
-                  _resizeHeight = this.states[k].size.height;
+                  _resizeHeight = this.widget.states[k].size.height;
                   HapticFeedback.selectionClick();
                 },
                 onLongPressMoveUpdate: (touch) {
-                  setState(() {
-                    this.states[k].size = Size.fromHeight(_resizeHeight + touch.localOffsetFromOrigin.dy);
-                  });
+                  this.widget.onResize(k, this.widget.states[k].size.height,
+                      _resizeHeight + touch.localOffsetFromOrigin.dy);
                 },
                 child: Container(
                   height: 40,
@@ -209,7 +202,7 @@ class _ChartContainerState extends State<ChartContainer>
   Widget _buildReorderableChart(Key k) {
     return SizedBox(
       key: Key(k.toString()),
-      height: this.states[k].size.height,
+      height: this.widget.states[k].size.height,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -252,9 +245,9 @@ class _ChartContainerState extends State<ChartContainer>
           color: this.widget.dividerColor,
           padding: EdgeInsets.symmetric(vertical: 1),
           child: CustomPaint(
-            size: this.states[k].size,
+            size: this.widget.states[k].size,
             painter: SingleChartPainter(
-              state: this.states[k],
+              state: this.widget.states[k],
               constraints: constraint,
               data: widget.data,
               scaleX: mScaleX,

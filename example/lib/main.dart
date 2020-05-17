@@ -41,6 +41,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool resize = false;
   bool line = false;
   List<DepthEntity> _bids, _asks;
+  Map<Key, SingleBaseChartState> states;
+  List<Key> order;
 
   @override
   void initState() {
@@ -59,6 +61,19 @@ class _MyHomePageState extends State<MyHomePage> {
           .cast<DepthEntity>();
       initDepth(bids, asks);
     });
+    final charts = [
+      SingleMainChartState(isLine: this.line),
+      SingleVolChartState(),
+      SingleSecondaryChartState(state: SecondaryState.MACD,),
+      SingleSecondaryChartState(state: SecondaryState.KDJ),
+      SingleSecondaryChartState(state: SecondaryState.RSI),
+      SingleSecondaryChartState(state: SecondaryState.WR),
+    ];
+    this.order = List.generate(charts.length, (i) => UniqueKey());
+    this.states = Map();
+    for (int i = 0; i < this.order.length; i++) {
+      this.states[this.order[i]] = charts[i];
+    }
   }
 
   void initDepth(List<DepthEntity> bids, List<DepthEntity> asks) {
@@ -107,9 +122,20 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           FlatButton(
             onPressed: () {
-              setState(() {
-                this.line = !this.line;
+              this.line = !this.line;
+              Key key;
+              this.states.forEach((k, v) {
+                if (v is SingleMainChartState) {
+                  key = k;
+                }
               });
+              if (key != null) {
+                setState(() {
+                  this.states[key] = (this.states[key] as SingleMainChartState).copyWith(
+                    isLine: this.line
+                  );
+                });
+              }
             },
             child: Text("Line"),
           ),
@@ -123,14 +149,19 @@ class _MyHomePageState extends State<MyHomePage> {
           resizeMode: this.resize,
           fixedLength: 2,
           timeFormat: TimeFormat.YEAR_MONTH_DAY,
-          states: [
-            SingleMainChartState(isLine: this.line),
-            SingleVolChartState(),
-            SingleSecondaryChartState(state: SecondaryState.MACD,),
-            SingleSecondaryChartState(state: SecondaryState.KDJ),
-            SingleSecondaryChartState(state: SecondaryState.RSI),
-            SingleSecondaryChartState(state: SecondaryState.WR),
-          ],
+          onReorder: (int oldIndex, int newIndex) {
+            final Key item = this.order.removeAt(oldIndex);
+            this.order.insert(newIndex, item);
+            setState(() {
+            });
+          },
+          onResize: (k, oldHeight, newHeight) {
+            setState(() {
+              this.states[k].size = Size.fromHeight(newHeight);
+            });
+          },
+          states: this.states,
+          order: this.order,
         ),
       ),
     );
