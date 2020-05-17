@@ -39,6 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isLine = true;
   bool reorder = false;
   bool resize = false;
+  bool line = false;
   List<DepthEntity> _bids, _asks;
 
   @override
@@ -104,6 +105,14 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             child: Text("Resize"),
           ),
+          FlatButton(
+            onPressed: () {
+              setState(() {
+                this.line = !this.line;
+              });
+            },
+            child: Text("Line"),
+          ),
         ],
       ),
       body: SafeArea(
@@ -115,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
           fixedLength: 2,
           timeFormat: TimeFormat.YEAR_MONTH_DAY,
           states: [
-            SingleMainChartState(),
+            SingleMainChartState(isLine: this.line),
             SingleVolChartState(),
             SingleSecondaryChartState(state: SecondaryState.MACD,),
             SingleSecondaryChartState(state: SecondaryState.KDJ),

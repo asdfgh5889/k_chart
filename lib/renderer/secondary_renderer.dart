@@ -137,31 +137,34 @@ class SecondaryRenderer extends BaseChartRenderer<MACDEntity> {
 
   @override
   void drawRightText(canvas, textStyle, int gridRows) {
-    TextPainter maxTp = TextPainter(
-        text: TextSpan(text: "${format(maxValue)}", style: textStyle),
-        textDirection: TextDirection.ltr);
-    maxTp.layout();
-    TextPainter minTp = TextPainter(
-        text: TextSpan(text: "${format(minValue)}", style: textStyle),
-        textDirection: TextDirection.ltr);
-    minTp.layout();
-
-    maxTp.paint(canvas,
-        Offset(chartRect.width - maxTp.width, chartRect.top - topPadding));
-    minTp.paint(canvas,
-        Offset(chartRect.width - minTp.width, chartRect.bottom - minTp.height));
+    double rowSpace = chartRect.height / gridRows;
+    for (var i = 0; i <= gridRows; ++i) {
+      double value = (gridRows - i) * rowSpace / scaleY + minValue;
+      TextSpan span = TextSpan(text: "${format(value)}", style: textStyle);
+      TextPainter tp =
+      TextPainter(text: span, textDirection: TextDirection.ltr);
+      tp.layout();
+      if (i == 0) {
+        tp.paint(canvas, Offset(chartRect.width - tp.width, topPadding));
+      } else {
+        tp.paint(
+            canvas,
+            Offset(chartRect.width - tp.width,
+                rowSpace * i - tp.height + topPadding));
+      }
+    }
   }
 
   @override
   void drawGrid(Canvas canvas, int gridRows, int gridColumns) {
-    canvas.drawLine(Offset(0, chartRect.top),
-        Offset(chartRect.width, chartRect.top), gridPaint);
-    canvas.drawLine(Offset(0, chartRect.bottom),
-        Offset(chartRect.width, chartRect.bottom), gridPaint);
+    double rowSpace = chartRect.height / gridRows;
+    for (int i = 0; i <= gridRows; i++) {
+      canvas.drawLine(Offset(0, rowSpace * i + topPadding),
+          Offset(chartRect.width, rowSpace * i + topPadding), gridPaint);
+    }
     double columnSpace = chartRect.width / gridColumns;
     for (int i = 0; i <= columnSpace; i++) {
-      //mSecondaryRect垂直线
-      canvas.drawLine(Offset(columnSpace * i, chartRect.top - topPadding),
+      canvas.drawLine(Offset(columnSpace * i, topPadding / 3),
           Offset(columnSpace * i, chartRect.bottom), gridPaint);
     }
   }
