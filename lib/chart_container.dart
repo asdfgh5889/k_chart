@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:k_chart/flutter_k_chart.dart';
+import 'package:reorderables/reorderables.dart';
 import 'chart_style.dart';
 import 'entity/info_window_entity.dart';
 import 'entity/k_line_entity.dart';
@@ -145,13 +146,8 @@ class _ChartContainerState extends State<ChartContainer>
 
   Widget _buildChartList(BuildContext context) {
     if (this.widget.orderMode) {
-      return ReorderableListView(
-        scrollDirection: Axis.vertical,
-        padding: EdgeInsets.all(0),
+      return ReorderableColumn(
         onReorder: (int oldIndex, int newIndex) {
-          if (newIndex > oldIndex) {
-            newIndex -= 1;
-          }
           final Key item = this._order.removeAt(oldIndex);
           this._order.insert(newIndex, item);
           setState(() {

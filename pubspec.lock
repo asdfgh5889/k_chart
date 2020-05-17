@@ -116,6 +116,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.5"
+  reorderables:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "7eb2b7f257fd907cf1e79239d644ddfb767416af"
+      url: "https://github.com/hanshengchiu/reorderables"
+    source: git
+    version: "0.3.2"
   sky_engine:
     dependency: transitive
     description: flutter
