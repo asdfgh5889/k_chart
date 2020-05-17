@@ -233,6 +233,8 @@ abstract class SingleBaseChartState<T> {
   MaxMinValueCalculator get maxMinValue;
   Size get size;
   set size(Size s);
+  bool get drawCrossLine => false;
+  bool get drawMinMax => true;
 
   BaseChartRenderer<T> getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength);
@@ -247,6 +249,8 @@ class SingleMainChartState extends SingleBaseChartState {
   Size get size => this._size ?? Size(double.infinity, 300);
   @override
   set size(Size s) => this._size = s;
+  bool get drawCrossLine => true;
+  bool get drawMinMax => !isLine;
 
   SingleMainChartState({
     this.state = MainState.MA,

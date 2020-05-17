@@ -152,32 +152,34 @@ class SingleChartPainter extends SingleBaseChartPainter {
     double y = getMainY(point.close);
     double x;
     bool isLeft = false;
-    if (translateXtoX(getX(index)) < mWidth / 2) {
-      isLeft = false;
-      x = 1;
-      Path path = new Path();
-      path.moveTo(x, y - r);
-      path.lineTo(x, y + r);
-      path.lineTo(textWidth + 2 * w1, y + r);
-      path.lineTo(textWidth + 2 * w1 + w2, y);
-      path.lineTo(textWidth + 2 * w1, y - r);
-      path.close();
-      canvas.drawPath(path, selectPointPaint);
-      canvas.drawPath(path, selectorBorderPaint);
-      tp.paint(canvas, Offset(x + w1, y - textHeight / 2));
-    } else {
-      isLeft = true;
-      x = mWidth - textWidth - 1 - 2 * w1 - w2;
-      Path path = new Path();
-      path.moveTo(x, y);
-      path.lineTo(x + w2, y + r);
-      path.lineTo(mWidth - 2, y + r);
-      path.lineTo(mWidth - 2, y - r);
-      path.lineTo(x + w2, y - r);
-      path.close();
-      canvas.drawPath(path, selectPointPaint);
-      canvas.drawPath(path, selectorBorderPaint);
-      tp.paint(canvas, Offset(x + w1 + w2, y - textHeight / 2));
+    if (state.drawCrossLine) {
+      if (translateXtoX(getX(index)) < mWidth / 2) {
+        isLeft = false;
+        x = 1;
+        Path path = new Path();
+        path.moveTo(x, y - r);
+        path.lineTo(x, y + r);
+        path.lineTo(textWidth + 2 * w1, y + r);
+        path.lineTo(textWidth + 2 * w1 + w2, y);
+        path.lineTo(textWidth + 2 * w1, y - r);
+        path.close();
+        canvas.drawPath(path, selectPointPaint);
+        canvas.drawPath(path, selectorBorderPaint);
+        tp.paint(canvas, Offset(x + w1, y - textHeight / 2));
+      } else {
+        isLeft = true;
+        x = mWidth - textWidth - 1 - 2 * w1 - w2;
+        Path path = new Path();
+        path.moveTo(x, y);
+        path.lineTo(x + w2, y + r);
+        path.lineTo(mWidth - 2, y + r);
+        path.lineTo(mWidth - 2, y - r);
+        path.lineTo(x + w2, y - r);
+        path.close();
+        canvas.drawPath(path, selectPointPaint);
+        canvas.drawPath(path, selectorBorderPaint);
+        tp.paint(canvas, Offset(x + w1 + w2, y - textHeight / 2));
+      }
     }
 
     TextPainter dateTp = getTextPainter(getDate(point.time), Colors.white);
@@ -219,9 +221,9 @@ class SingleChartPainter extends SingleBaseChartPainter {
 
   @override
   void drawMaxAndMin(Canvas canvas) {
-    //TODO: set isLine condition
-    //if (isLine == true) return;
-
+    if (!state.drawMinMax) {
+      return;
+    }
 
     //绘制最大值和最小值
     double x = translateXtoX(getX(mMinIndex));
@@ -252,6 +254,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
 
   ///画交叉线
   void drawCrossLine(Canvas canvas, Size size) {
+
     var index = calculateSelectedX(selectX);
     KLineEntity point = getItem(index);
     Paint paintY = Paint()
@@ -264,14 +267,16 @@ class SingleChartPainter extends SingleBaseChartPainter {
     canvas.drawLine(Offset(x, mTopPadding),
         Offset(x, size.height - mBottomPadding), paintY);
 
-    Paint paintX = Paint()
-      ..color = Colors.white
-      ..strokeWidth = ChartStyle.hCrossWidth
-      ..isAntiAlias = true;
-    // k线图横线
-    canvas.drawLine(Offset(-mTranslateX, y),
-        Offset(-mTranslateX + mWidth / scaleX, y), paintX);
-    canvas.drawCircle(Offset(x, y), 2.0, paintX);
+    if (state.drawCrossLine) {
+      Paint paintX = Paint()
+        ..color = Colors.white
+        ..strokeWidth = ChartStyle.hCrossWidth
+        ..isAntiAlias = true;
+      // k线图横线
+      canvas.drawLine(Offset(-mTranslateX, y),
+          Offset(-mTranslateX + mWidth / scaleX, y), paintX);
+      canvas.drawCircle(Offset(x, y), 2.0, paintX);
+    }
   }
 
   TextPainter getTextPainter(text, [color = ChartColors.defaultTextColor]) {
