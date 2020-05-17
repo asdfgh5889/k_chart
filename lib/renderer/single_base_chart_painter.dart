@@ -27,7 +27,7 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   Rect mRect;
   double mDisplayHeight, mWidth;
   double mTopPadding = 30.0, mBottomPadding = 20.0, mChildPadding = 12.0;
-  final int mGridRows = 4, mGridColumns = 4;
+  int mGridRows = 4, mGridColumns = 4;
   int mStartIndex = 0, mStopIndex = 0;
   double mMaxValue = double.minPositive, mMinValue = double.maxFinite;
   double mTranslateX = double.minPositive;

@@ -166,40 +166,19 @@ class _ChartContainerState extends State<ChartContainer>
       return ListView(
         scrollDirection: Axis.vertical,
         padding: EdgeInsets.all(0),
-        children: this._order.map((k) => Container(
-          key: Key(k.toString()),
-          color: this.widget.dividerColor,
-          padding: EdgeInsets.symmetric(vertical: 1),
-          child: _buildSingleChart(k),
-        )).toList(),
+        children: this._order.map((k) => _buildSingleChart(k)).toList(),
       );
     }
   }
 
   double _resizeHeight;
   Widget _buildResizableChart(Key k) {
-    return Container(
+    return ClipRRect(
       key: Key(k.toString()),
-      color: this.widget.dividerColor,
-      padding: EdgeInsets.all(2),
-      child: ClipRRect(
-        child: Stack(
-          children: <Widget>[
-            CustomPaint(
-              size: this.states[k].size,
-              painter: SingleChartPainter(
-                state: this.states[k],
-                data: widget.data,
-                scaleX: mScaleX,
-                scrollX: mScrollX,
-                selectX: mSelectX,
-                isLongPass: isLongPress,
-                sink: mInfoWindowStream?.sink,
-                bgColor: widget.bgColor,
-                fixedLength: widget.fixedLength,
-              ),
-            ),
-            Positioned(
+      child: Stack(
+        children: <Widget>[
+          _buildSingleChart(k),
+          Positioned(
               bottom: 0,
               left: 0,
               child: GestureDetector(
@@ -221,9 +200,8 @@ class _ChartContainerState extends State<ChartContainer>
                   child: Icon(Icons.unfold_more, color: Colors.white,),
                 ),
               )
-            )
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
@@ -232,48 +210,64 @@ class _ChartContainerState extends State<ChartContainer>
     return SizedBox(
       key: Key(k.toString()),
       height: this.states[k].size.height,
-      child: Container(
-        color: this.widget.dividerColor,
-        padding: EdgeInsets.symmetric(vertical: 1),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            SizedBox(
-              width: 40,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black45,
-                ),
-                child: Icon(Icons.reorder, color: Colors.white,),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          SizedBox(
+            width: 40,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xff18191d),//this.widget.dividerColor.withOpacity(0.5),
+                border: Border(
+                  top: BorderSide(
+                    color: this.widget.dividerColor,
+                    width: 1
+                  ),
+                  bottom: BorderSide(
+                    color: this.widget.dividerColor,
+                    width: 1
+                  ),
+                )
               ),
+              child: Icon(Icons.reorder, color: Colors.white,),
             ),
-            Expanded(
-              child: ClipRRect(
-                child: _buildSingleChart(k),
-              ),
+          ),
+          Expanded(
+            child: ClipRRect(
+              child: _buildSingleChart(k),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSingleChart(Key k) {
-    return CustomPaint(
+    return LayoutBuilder(
       key: Key(k.toString()),
-      size: this.states[k].size,
-      painter: SingleChartPainter(
-        state: this.states[k],
-        data: widget.data,
-        scaleX: mScaleX,
-        scrollX: mScrollX,
-        selectX: mSelectX,
-        isLongPass: isLongPress,
-        sink: mInfoWindowStream?.sink,
-        bgColor: widget.bgColor,
-        fixedLength: widget.fixedLength,
-      ),
+      builder: (context, constraint) {
+        return Container(
+          key: Key(k.toString()),
+          color: this.widget.dividerColor,
+          padding: EdgeInsets.symmetric(vertical: 1),
+          child: CustomPaint(
+            size: this.states[k].size,
+            painter: SingleChartPainter(
+              state: this.states[k],
+              constraints: constraint,
+              data: widget.data,
+              scaleX: mScaleX,
+              scrollX: mScrollX,
+              selectX: mSelectX,
+              isLongPass: isLongPress,
+              sink: mInfoWindowStream?.sink,
+              bgColor: widget.bgColor,
+              fixedLength: widget.fixedLength,
+            ),
+          ),
+        );
+      },
     );
   }
 

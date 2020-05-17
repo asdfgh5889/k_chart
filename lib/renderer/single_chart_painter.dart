@@ -25,7 +25,8 @@ class SingleChartPainter extends SingleBaseChartPainter {
     @required scrollX,
     @required isLongPass,
     @required selectX,
-    @required state,
+    @required SingleBaseChartState state,
+    BoxConstraints constraints,
     this.sink,
     this.bgColor,
     this.fixedLength,
@@ -37,7 +38,13 @@ class SingleChartPainter extends SingleBaseChartPainter {
         isLongPress: isLongPass,
         selectX: selectX,
         state: state,
-      );
+      ) {
+    if (constraints != null) {
+      final gridRatio = 3 / 4;
+      this.mGridColumns = 4;
+      this.mGridRows = (state.size.height * this.mGridColumns / (gridRatio * constraints.maxWidth)).floor();
+    }
+  }
 
   @override
   void initChartRenderer() {
