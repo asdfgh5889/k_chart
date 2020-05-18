@@ -39,7 +39,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
         selectX: selectX,
         state: state,
       ) {
-    if (constraints != null) {
+    if (constraints != null && constraints.maxWidth != 0) {
       final gridRatio = 3 / 4;
       this.mGridColumns = 4;
       this.mGridRows = (state.size.height * this.mGridColumns / (gridRatio * constraints.maxWidth)).floor();

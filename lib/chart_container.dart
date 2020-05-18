@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:k_chart/flutter_k_chart.dart';
@@ -150,29 +151,29 @@ class _ChartContainerState extends State<ChartContainer>
 
   Widget _buildChartList(BuildContext context) {
     if (this.widget.orderMode) {
+      if (_resizing) {
+        return ListView(
+          key: PageStorageKey("chart_list"),
+          children: this.widget.order.map((k) => _buildReorderableChart(k)).toList(),
+        );
+      }
+
       return ReorderableColumn(
         key: PageStorageKey("chart_list"),
         onReorder: this.widget.onReorder,
         children: this.widget.order.map((k) => _buildReorderableChart(k)).toList(),
       );
-    } else if (this.widget.resizeMode) {
-      return ListView(
-        key: PageStorageKey("chart_list"),
-        scrollDirection: Axis.vertical,
-        padding: EdgeInsets.all(0),
-        children: this.widget.order.map((k) => _buildResizableChart(k)).toList(),
-      );
     } else {
       return ListView(
         key: PageStorageKey("chart_list"),
-        scrollDirection: Axis.vertical,
-        padding: EdgeInsets.all(0),
-        children: this.widget.order.map((k) => _buildSingleChart(k)).toList(),
+        children: this.widget.order.map((k) => this.widget.resizeMode
+            ? _buildResizableChart(k) : _buildSingleChart(k)).toList(),
       );
     }
   }
 
   double _resizeHeight;
+  bool _resizing = false;
   Widget _buildResizableChart(Key k) {
     return ClipRRect(
       key: Key(k.toString()),
@@ -182,14 +183,24 @@ class _ChartContainerState extends State<ChartContainer>
           Positioned(
               bottom: 0,
               left: 0,
-              child: GestureDetector(
-                onLongPressStart: (touch) {
+              child: _Resizable(
+                key: Key("$k gesture"),
+                onStart: (touch) {
                   _resizeHeight = this.widget.states[k].size.height;
                   HapticFeedback.selectionClick();
+                  setState(() {
+                    _resizing = true;
+                  });
                 },
-                onLongPressMoveUpdate: (touch) {
+                onUpdate: (touch) {
+                  print("update");
                   this.widget.onResize(k, this.widget.states[k].size.height,
                       _resizeHeight + touch.localOffsetFromOrigin.dy);
+                },
+                onEnd: (_) {
+                  setState(() {
+                    _resizing = false;
+                  });
                 },
                 child: Container(
                   height: 40,
@@ -235,7 +246,8 @@ class _ChartContainerState extends State<ChartContainer>
           ),
           Expanded(
             child: ClipRRect(
-              child: _buildSingleChart(k),
+              child: this.widget.resizeMode
+                  ? _buildResizableChart(k) : _buildSingleChart(k),
             ),
           ),
         ],
@@ -250,9 +262,10 @@ class _ChartContainerState extends State<ChartContainer>
         return Container(
           key: Key(k.toString()),
           color: this.widget.dividerColor,
+          width: constraint.maxWidth,
+          height: this.widget.states[k].size.height,
           padding: EdgeInsets.symmetric(vertical: 1),
           child: CustomPaint(
-            size: this.widget.states[k].size,
             painter: SingleChartPainter(
               state: this.widget.states[k],
               constraints: constraint,
@@ -406,5 +419,29 @@ class _ChartContainerState extends State<ChartContainer>
   @override
   void deactivate() {
     super.deactivate();
+  }
+}
+
+class _Resizable extends StatefulWidget {
+  final Function(LongPressStartDetails) onStart;
+  final Function(LongPressMoveUpdateDetails) onUpdate;
+  final Function(LongPressEndDetails) onEnd;
+  final Widget child;
+
+  _Resizable({Key key, this.child, this.onStart, this.onUpdate, this.onEnd}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _ResizableState();
+}
+
+class _ResizableState extends State<_Resizable> {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPressStart: this.widget.onStart,
+      onLongPressMoveUpdate: this.widget.onUpdate,
+      onLongPressEnd: this.widget.onEnd,
+      child: this.widget.child,
+    );
   }
 }
