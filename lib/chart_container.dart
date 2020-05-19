@@ -142,9 +142,12 @@ class _ChartContainerState extends State<ChartContainer>
         mInfoWindowStream?.sink?.add(null);
         notifyChanged();
       },
-      child: PageStorage(
-        bucket: this._bucket,
-        child: _buildChartList(context)
+      child: Container(
+        color: ChartColors.bgColor,
+        child: PageStorage(
+            bucket: this._bucket,
+            child: _buildChartList(context)
+        ),
       ),
     );
   }
