@@ -157,88 +157,79 @@ class _ChartContainerState extends State<ChartContainer>
       return ReorderableColumn(
         key: PageStorageKey("chart_list"),
         onReorder: this.widget.onReorder,
-        children: this.widget.order.map((k) => _buildReorderableChart(k)).toList(),
+        children: this.widget.order.map((k) => _buildEditableChart(k)).toList(),
       );
     } else {
       return ListView(
         key: PageStorageKey("chart_list"),
         children: this.widget.order.map((k) => this.widget.resizeMode
-            ? _buildResizableChart(k) : _buildSingleChart(k)).toList(),
+            ? _buildEditableChart(k) : _buildSingleChart(k)).toList(),
       );
     }
   }
 
   double _resizeHeight;
-  bool _resizing = false;
-  Widget _buildResizableChart(Key k) {
+  Widget _buildEditableChart(Key k) {
     return ClipRRect(
       key: Key(k.toString()),
       child: Stack(
         children: <Widget>[
           _buildSingleChart(k),
-          Positioned(
-              bottom: 0,
+          if (this.widget.orderMode)
+            Positioned(
+              top: 0,
               left: 0,
-              child: _Resizable(
-                key: Key("$k gesture"),
-                onStart: (touch) {
-                  _resizeHeight = this.widget.states[k].size.height;
-                  HapticFeedback.selectionClick();
-                },
-                onUpdate: (dy) {
-                  if (_resizeHeight + dy > 100) {
-                    this.widget.onResize(k, this.widget.states[k].size.height,
-                        _resizeHeight + dy);
-                  }
-                },
+              child: SizedBox(
+                width: 40,
+                height: this.widget.states[k].size.height,
                 child: Container(
-                  height: 40,
-                  width: 40,
                   decoration: BoxDecoration(
-                    color: this.widget.dividerColor,
+                      color: Color(0xff18191d),//this.widget.dividerColor.withOpacity(0.5),
+                      border: Border(
+                        top: BorderSide(
+                            color: this.widget.dividerColor,
+                            width: 1
+                        ),
+                        bottom: BorderSide(
+                            color: this.widget.dividerColor,
+                            width: 1
+                        ),
+                        right: BorderSide(
+                            color: this.widget.dividerColor,
+                            width: 1
+                        ),
+                      )
                   ),
-                  child: Icon(Icons.unfold_more, color: Colors.white,),
+                  child: Icon(Icons.reorder, color: Colors.white,),
                 ),
-              )
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReorderableChart(Key k) {
-    return SizedBox(
-      key: Key(k.toString()),
-      height: this.widget.states[k].size.height,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          SizedBox(
-            width: 40,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xff18191d),//this.widget.dividerColor.withOpacity(0.5),
-                border: Border(
-                  top: BorderSide(
-                    color: this.widget.dividerColor,
-                    width: 1
-                  ),
-                  bottom: BorderSide(
-                    color: this.widget.dividerColor,
-                    width: 1
+              ),
+            ),
+          if (this.widget.resizeMode)
+            Positioned(
+                bottom: 0,
+                left: 0,
+                child: _Resizable(
+                  key: Key("$k gesture"),
+                  onStart: (touch) {
+                    _resizeHeight = this.widget.states[k].size.height;
+                    HapticFeedback.selectionClick();
+                  },
+                  onUpdate: (dy) {
+                    if (_resizeHeight + dy > 100) {
+                      this.widget.onResize(k, this.widget.states[k].size.height,
+                          _resizeHeight + dy);
+                    }
+                  },
+                  child: Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: this.widget.dividerColor,
+                    ),
+                    child: Icon(Icons.unfold_more, color: Colors.white,),
                   ),
                 )
-              ),
-              child: Icon(Icons.reorder, color: Colors.white,),
-            ),
-          ),
-          Expanded(
-            child: ClipRRect(
-              child: this.widget.resizeMode
-                  ? _buildResizableChart(k) : _buildSingleChart(k),
-            ),
-          ),
+            )
         ],
       ),
     );
