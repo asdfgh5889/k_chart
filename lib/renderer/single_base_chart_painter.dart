@@ -238,6 +238,8 @@ abstract class SingleBaseChartState<T> {
 
   BaseChartRenderer<T> getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength);
+
+  SingleBaseChartState<T> clone();
 }
 
 class SingleMainChartState extends SingleBaseChartState {
@@ -253,7 +255,7 @@ class SingleMainChartState extends SingleBaseChartState {
   bool get drawMinMax => !isLine;
 
   SingleMainChartState({
-    this.state = MainState.MA,
+    this.state = MainState.NONE,
     this.isLine = false,
     this.maDayList = const [5, 10, 20],
     Size size
@@ -307,6 +309,14 @@ class SingleMainChartState extends SingleBaseChartState {
       }
     }
   };
+
+  @override
+  SingleBaseChartState clone() => SingleMainChartState(
+    size: Size.copy(this.size),
+    state: this.state,
+    isLine: this.isLine,
+    maDayList: List.from(this.maDayList),
+  );
 }
 
 class SingleSecondaryChartState extends SingleBaseChartState {
@@ -349,6 +359,12 @@ class SingleSecondaryChartState extends SingleBaseChartState {
       painter.mMinValue = 0;
     }
   };
+
+  @override
+  SingleBaseChartState clone() => SingleSecondaryChartState(
+    state: this.state,
+    size: Size.copy(this.size),
+  );
 }
 
 class SingleVolChartState extends SingleBaseChartState {
@@ -369,4 +385,9 @@ class SingleVolChartState extends SingleBaseChartState {
     painter.mMaxValue = max(painter.mMaxValue, max(item.vol, max(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
     painter.mMinValue = min(painter.mMinValue, min(item.vol, min(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
   };
+
+  @override
+  SingleBaseChartState clone() => SingleVolChartState(
+    size: Size.copy(this.size),
+  );
 }

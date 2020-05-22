@@ -1,4 +1,5 @@
 import 'dart:async' show StreamSink;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:k_chart/utils/number_util.dart';
@@ -42,7 +43,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
     if (constraints != null && constraints.maxWidth != 0) {
       final gridRatio = 3 / 4;
       this.mGridColumns = 4;
-      this.mGridRows = (state.size.height * this.mGridColumns / (gridRatio * constraints.maxWidth)).floor();
+      this.mGridRows = max((state.size.height * this.mGridColumns / (gridRatio * constraints.maxWidth)).floor(), 1);
     }
   }
 
