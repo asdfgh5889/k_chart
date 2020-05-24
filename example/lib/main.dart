@@ -62,7 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
       initDepth(bids, asks);
     });
     final charts = [
-      SingleMainChartState(isLine: this.line),
+      SingleMainChartState(isLine: this.line, state: MainState.NONE),
+      SingleMainChartState(isLine: this.line, state: MainState.BOLL),
       SingleVolChartState(),
       SingleSecondaryChartState(state: SecondaryState.MACD,),
       SingleSecondaryChartState(state: SecondaryState.KDJ),

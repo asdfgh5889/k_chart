@@ -96,18 +96,21 @@ class _ChartContainerState extends State<ChartContainer>
       mScrollX = mSelectX = 0.0;
       mScaleX = 1.0;
     }
+
+    final editMode =  this.widget.orderMode || this.widget.resizeMode;
+
     return GestureDetector(
-      onHorizontalDragDown: (details) {
+      onHorizontalDragDown: editMode ? null : (details) {
         _stopAnimation();
         _onDragChanged(true);
       },
-      onHorizontalDragUpdate: (details) {
+      onHorizontalDragUpdate: editMode ? null : (details) {
         if (isScale || isLongPress) return;
         mScrollX = (details.primaryDelta / mScaleX + mScrollX)
             .clamp(0.0, SingleBaseChartPainter.maxScrollX);
         notifyChanged();
       },
-      onHorizontalDragEnd: (DragEndDetails details) {
+      onHorizontalDragEnd: editMode ? null : (DragEndDetails details) {
         var velocity = details.velocity.pixelsPerSecond.dx;
         _onFling(velocity);
       },
@@ -124,20 +127,20 @@ class _ChartContainerState extends State<ChartContainer>
         isScale = false;
         _lastScale = mScaleX;
       },
-      onLongPressStart: (details) {
+      onLongPressStart: editMode ? null : (details) {
         isLongPress = true;
         if (mSelectX != details.globalPosition.dx) {
           mSelectX = details.globalPosition.dx;
           notifyChanged();
         }
       },
-      onLongPressMoveUpdate: (details) {
+      onLongPressMoveUpdate: editMode ? null : (details) {
         if (mSelectX != details.globalPosition.dx) {
           mSelectX = details.globalPosition.dx;
           notifyChanged();
         }
       },
-      onLongPressEnd: (details) {
+      onLongPressEnd: editMode ? null : (details) {
         isLongPress = false;
         mInfoWindowStream?.sink?.add(null);
         notifyChanged();
@@ -172,65 +175,83 @@ class _ChartContainerState extends State<ChartContainer>
   Widget _buildEditableChart(Key k) {
     return ClipRRect(
       key: Key(k.toString()),
-      child: Stack(
-        children: <Widget>[
-          _buildSingleChart(k),
-          if (this.widget.orderMode)
-            Positioned(
-              top: 0,
-              left: 0,
-              child: SizedBox(
-                width: 40,
-                height: this.widget.states[k].size.height,
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: Color(0xff18191d),//this.widget.dividerColor.withOpacity(0.5),
-                      border: Border(
-                        top: BorderSide(
-                            color: this.widget.dividerColor,
-                            width: 1
-                        ),
-                        bottom: BorderSide(
-                            color: this.widget.dividerColor,
-                            width: 1
-                        ),
-                        right: BorderSide(
-                            color: this.widget.dividerColor,
-                            width: 1
-                        ),
-                      )
-                  ),
-                  child: Icon(Icons.reorder, color: Colors.white,),
-                ),
-              ),
-            ),
-          if (this.widget.resizeMode)
-            Positioned(
-                bottom: 0,
-                left: 0,
-                child: _Resizable(
-                  key: Key("$k gesture"),
-                  onStart: (touch) {
-                    _resizeHeight = this.widget.states[k].size.height;
-                    HapticFeedback.selectionClick();
-                  },
-                  onUpdate: (dy) {
-                    if (_resizeHeight + dy > 100) {
-                      this.widget.onResize(k, this.widget.states[k].size.height,
-                          _resizeHeight + dy);
-                    }
-                  },
-                  child: Container(
+      child: LayoutBuilder(
+        builder: (context, constraint) {
+          return Stack(
+            children: <Widget>[
+              _buildSingleChart(k),
+              if (this.widget.orderMode)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  child: SizedBox(
+                    width: constraint.maxWidth,
                     height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      color: this.widget.dividerColor,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color: Color(0xff18191d),//this.widget.dividerColor.withOpacity(0.5),
+                          border: Border(
+                            top: BorderSide(
+                                color: this.widget.dividerColor,
+                                width: 1
+                            ),
+                            left: BorderSide(
+                                color: this.widget.dividerColor,
+                                width: 1
+                            ),
+                            right: BorderSide(
+                                color: this.widget.dividerColor,
+                                width: 1
+                            ),
+                          )
+                      ),
+                      child: Icon(Icons.reorder, color: Colors.white,),
                     ),
-                    child: Icon(Icons.unfold_more, color: Colors.white,),
                   ),
+                ),
+              if (this.widget.resizeMode)
+                Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: _Resizable(
+                      key: Key("$k gesture"),
+                      onStart: (touch) {
+                        _resizeHeight = this.widget.states[k].size.height;
+                        HapticFeedback.selectionClick();
+                      },
+                      onUpdate: (dy) {
+                        if (_resizeHeight + dy > 100) {
+                          this.widget.onResize(k, this.widget.states[k].size.height,
+                              _resizeHeight + dy);
+                        }
+                      },
+                      child: Container(
+                        height: 40,
+                        width: constraint.maxWidth,
+                        decoration: BoxDecoration(
+                          color: Color(0xff18191d),
+                            border: Border(
+                              top: BorderSide(
+                                  color: this.widget.dividerColor,
+                                  width: 1
+                              ),
+                              left: BorderSide(
+                                  color: this.widget.dividerColor,
+                                  width: 1
+                              ),
+                              right: BorderSide(
+                                  color: this.widget.dividerColor,
+                                  width: 1
+                              ),
+                            )
+                        ),
+                        child: Icon(Icons.unfold_more, color: Colors.white,),
+                      ),
+                    )
                 )
-            )
-        ],
+            ],
+          );
+        },
       ),
     );
   }
