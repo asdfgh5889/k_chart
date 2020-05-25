@@ -172,6 +172,7 @@ class _ChartContainerState extends State<ChartContainer>
   }
 
   double _resizeHeight;
+  Key _isResizing;
   Widget _buildEditableChart(Key k) {
     return ClipRRect(
       key: Key(k.toString()),
@@ -218,6 +219,9 @@ class _ChartContainerState extends State<ChartContainer>
                       onStart: (touch) {
                         _resizeHeight = this.widget.states[k].size.height;
                         HapticFeedback.selectionClick();
+                        setState(() {
+                          _isResizing = k;
+                        });
                       },
                       onUpdate: (dy) {
                         if (_resizeHeight + dy > 100) {
@@ -225,11 +229,14 @@ class _ChartContainerState extends State<ChartContainer>
                               _resizeHeight + dy);
                         }
                       },
+                      onEnd: (_) => setState(() {
+                        _isResizing = null;
+                      }),
                       child: Container(
                         height: 40,
                         width: constraint.maxWidth,
                         decoration: BoxDecoration(
-                          color: Color(0xff18191d),
+                          color: this._isResizing == k ? Color(0xff0B0E1A) : Color(0xff18191d),
                             border: Border(
                               top: BorderSide(
                                   color: this.widget.dividerColor,
@@ -452,8 +459,14 @@ class _ResizableState extends State<_Resizable> {
             this.widget.onUpdate(pointer.position.dy - _position);
           }
         },
-        onPointerUp: (pointer) => this._resizing = false,
-        onPointerCancel: (_) => this._resizing = false,
+        onPointerUp: (pointer) {
+          this._resizing = false;
+          this.widget.onEnd(pointer);
+        },
+        onPointerCancel: (_) {
+          this._resizing = false;
+          this.widget.onEnd(null);
+        },
         child: this.widget.child,
       ),
     );
