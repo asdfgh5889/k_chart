@@ -6,3 +6,7 @@ export 'entity/k_line_entity.dart'; //数据
 
 export 'entity/depth_entity.dart';
 export 'depth_chart.dart';
+export 'chart_container.dart';
+export 'renderer/base_chart_painter.dart';
+export 'renderer/single_base_chart_painter.dart';
+export 'renderer/single_chart_painter.dart';
