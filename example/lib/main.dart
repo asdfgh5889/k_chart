@@ -63,12 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     final charts = [
       SingleMainChartState(isLine: this.line, state: MainState.NONE),
-      SingleVolChartState(renderMA: true),
-      SingleSecondaryChartState(
-        state: SecondaryState.MACD,
-      ),
-      SingleSecondaryChartState(state: SecondaryState.KDJ),
-      SingleSecondaryChartState(state: SecondaryState.RSI),
+      SingleVolChartState(renderMA: false),
       SingleSecondaryChartState(state: SecondaryState.WR),
     ];
     this.order = List.generate(charts.length, (i) => UniqueKey());

@@ -51,6 +51,7 @@ class VolRenderer extends BaseChartRenderer<VolumeEntity> {
 
   @override
   void drawText(Canvas canvas, VolumeEntity data, double x) {
+    if (!this.renderMA) return;
     TextSpan span = TextSpan(
       children: [
         TextSpan(
