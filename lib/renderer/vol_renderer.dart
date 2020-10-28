@@ -69,19 +69,25 @@ class VolRenderer extends BaseChartRenderer<VolumeEntity> {
   }
 
   @override
-  void drawRightText(canvas, textStyle, int gridRows) {
+  void drawRightText(
+      Canvas canvas, Rect backgroundRect, TextStyle textStyle, int gridRows) {
     TextSpan span =
         TextSpan(text: "${NumberUtil.format(maxValue)}", style: textStyle);
     TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
     tp.layout();
     tp.paint(
-        canvas, Offset(chartRect.width - tp.width, chartRect.top - topPadding));
+        canvas,
+        Offset(
+            backgroundRect.width - tp.width, backgroundRect.top - topPadding));
   }
 
   @override
-  void drawGrid(Canvas canvas, int gridRows, int gridColumns) {
-    canvas.drawLine(Offset(0, chartRect.bottom),
-        Offset(chartRect.width, chartRect.bottom), gridPaint);
+  void drawGrid(Canvas canvas, Rect chartRect, int gridRows, int gridColumns,
+      [EdgeInsets padding]) {
+    canvas.drawLine(
+        Offset(0, chartRect.bottom),
+        Offset(chartRect.width + (padding?.right ?? 0), chartRect.bottom),
+        gridPaint);
     double columnSpace = chartRect.width / gridColumns;
     for (int i = 0; i <= columnSpace; i++) {
       //vol垂直线

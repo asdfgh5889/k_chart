@@ -3,6 +3,7 @@ export 'package:flutter/material.dart'
     show Color, required, TextStyle, Rect, Canvas, Size, CustomPainter;
 import 'package:flutter/material.dart'
     show Color, required, TextStyle, Rect, Canvas, Size, CustomPainter;
+import 'package:flutter/widgets.dart';
 import 'package:k_chart/utils/date_format_util.dart';
 import '../entity/k_line_entity.dart';
 import '../k_chart_widget.dart';
@@ -93,10 +94,16 @@ abstract class SingleBaseChartPainter extends CustomPainter {
     canvas.save();
     canvas.scale(1, 1);
     drawBg(canvas, size);
-    drawGrid(canvas, size);
+    drawGrid(canvas, this.mRect, EdgeInsets.only(right: this.paddingRight));
     if (data != null && data.isNotEmpty) {
+      final backgraoundRect = Rect.fromLTRB(
+        this.mRect.left,
+        this.mRect.top,
+        this.mRect.right + this.paddingRight,
+        this.mRect.bottom,
+      );
+      drawRightText(canvas, backgraoundRect);
       drawChart(canvas, size);
-      drawRightText(canvas);
       drawDate(canvas, Size(size.width - this.paddingRight, size.height));
       if (isLongPress == true) drawCrossLineText(canvas, size);
       drawText(canvas, data?.last, 5);
@@ -111,13 +118,13 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   void drawBg(Canvas canvas, Size size);
 
   //Grid
-  void drawGrid(Canvas canvas, Size size);
+  void drawGrid(Canvas canvas, Rect chartRect, [EdgeInsets padding]);
 
   //Chart
   void drawChart(Canvas canvas, Size size);
 
   //Right text
-  void drawRightText(canvas);
+  void drawRightText(Canvas canvas, Rect chartRect);
 
   //Date
   void drawDate(Canvas canvas, Size size);

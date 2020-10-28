@@ -136,31 +136,36 @@ class SecondaryRenderer extends BaseChartRenderer<MACDEntity> {
   }
 
   @override
-  void drawRightText(canvas, textStyle, int gridRows) {
-    double rowSpace = chartRect.height / gridRows;
+  void drawRightText(
+      Canvas canvas, Rect backgroundRect, TextStyle textStyle, int gridRows) {
+    double rowSpace = backgroundRect.height / gridRows;
     for (var i = 0; i <= gridRows; ++i) {
       double value = (gridRows - i) * rowSpace / scaleY + minValue;
       TextSpan span = TextSpan(text: "${format(value)}", style: textStyle);
       TextPainter tp =
-      TextPainter(text: span, textDirection: TextDirection.ltr);
+          TextPainter(text: span, textDirection: TextDirection.ltr);
       tp.layout();
       if (i == 0) {
-        tp.paint(canvas, Offset(chartRect.width - tp.width, topPadding));
+        tp.paint(canvas, Offset(backgroundRect.width - tp.width, topPadding));
       } else {
         tp.paint(
             canvas,
-            Offset(chartRect.width - tp.width,
+            Offset(backgroundRect.width - tp.width,
                 rowSpace * i - tp.height + topPadding));
       }
     }
   }
 
   @override
-  void drawGrid(Canvas canvas, int gridRows, int gridColumns) {
+  void drawGrid(Canvas canvas, Rect chartRect, int gridRows, int gridColumns,
+      [EdgeInsets padding]) {
     double rowSpace = chartRect.height / gridRows;
     for (int i = 0; i <= gridRows; i++) {
-      canvas.drawLine(Offset(0, rowSpace * i + topPadding),
-          Offset(chartRect.width, rowSpace * i + topPadding), gridPaint);
+      canvas.drawLine(
+          Offset(0, rowSpace * i + topPadding),
+          Offset(chartRect.width + (padding?.right ?? 0),
+              rowSpace * i + topPadding),
+          gridPaint);
     }
     double columnSpace = chartRect.width / gridColumns;
     for (int i = 0; i <= columnSpace; i++) {

@@ -42,11 +42,13 @@ abstract class BaseChartRenderer<T> {
     }
   }
 
-  void drawGrid(Canvas canvas, int gridRows, int gridColumns);
+  void drawGrid(Canvas canvas, Rect chartRect, int gridRows, int gridColumns,
+      [EdgeInsets padding]);
 
   void drawText(Canvas canvas, T data, double x);
 
-  void drawRightText(canvas, textStyle, int gridRows);
+  void drawRightText(
+      Canvas canvas, Rect backgroundRect, TextStyle textStyle, int gridRows);
 
   void drawChart(T lastPoint, T curPoint, double lastX, double curX, Size size,
       Canvas canvas);

@@ -102,8 +102,8 @@ class SingleChartPainter extends SingleBaseChartPainter {
   }
 
   @override
-  void drawGrid(Canvas canvas, Size size) {
-    renderer?.drawGrid(canvas, mGridRows, mGridColumns);
+  void drawGrid(Canvas canvas, Rect chartRect, [EdgeInsets padding]) {
+    renderer?.drawGrid(canvas, chartRect, mGridRows, mGridColumns, padding);
   }
 
   @override
@@ -142,9 +142,9 @@ class SingleChartPainter extends SingleBaseChartPainter {
   }
 
   @override
-  void drawRightText(canvas) {
+  void drawRightText(Canvas canvas, Rect backgraoundRect) {
     var textStyle = getTextStyle(ChartColors.defaultTextColor);
-    renderer?.drawRightText(canvas, textStyle, mGridRows);
+    renderer?.drawRightText(canvas, backgraoundRect, textStyle, mGridRows);
   }
 
   @override
