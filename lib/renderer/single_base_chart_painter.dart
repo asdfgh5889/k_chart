@@ -396,13 +396,15 @@ class SingleVolChartState extends SingleBaseChartState {
   Size get size => this._size ?? Size(double.infinity, 150);
   @override
   set size(Size s) => this._size = s;
+  bool renderMA;
 
-  SingleVolChartState({Size size}) : _size = size;
+  SingleVolChartState({Size size, this.renderMA = true}) : _size = size;
 
   @override
   BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength) {
-    return VolRenderer(rect, maxValue, minValue, topPadding, fixedLength);
+    return VolRenderer(
+        rect, maxValue, minValue, topPadding, fixedLength, this.renderMA);
   }
 
   MaxMinValueCalculator get maxMinValue =>

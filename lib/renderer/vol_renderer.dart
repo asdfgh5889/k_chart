@@ -7,9 +7,10 @@ import '../utils/number_util.dart';
 
 class VolRenderer extends BaseChartRenderer<VolumeEntity> {
   double mVolWidth = ChartStyle.volWidth;
+  bool renderMA;
 
   VolRenderer(Rect mainRect, double maxValue, double minValue,
-      double topPadding, int fixedLength)
+      double topPadding, int fixedLength, [this.renderMA = true])
       : super(
             chartRect: mainRect,
             maxValue: maxValue,
@@ -32,14 +33,16 @@ class VolRenderer extends BaseChartRenderer<VolumeEntity> {
                 : ChartColors.dnColor);
     }
 
-    if (lastPoint.MA5Volume != 0) {
-      drawLine(lastPoint.MA5Volume, curPoint.MA5Volume, canvas, lastX, curX,
-          ChartColors.ma5Color);
-    }
+    if (this.renderMA) {
+      if (lastPoint.MA5Volume != 0) {
+        drawLine(lastPoint.MA5Volume, curPoint.MA5Volume, canvas, lastX, curX,
+            ChartColors.ma5Color);
+      }
 
-    if (lastPoint.MA10Volume != 0) {
-      drawLine(lastPoint.MA10Volume, curPoint.MA10Volume, canvas, lastX, curX,
-          ChartColors.ma10Color);
+      if (lastPoint.MA10Volume != 0) {
+        drawLine(lastPoint.MA10Volume, curPoint.MA10Volume, canvas, lastX, curX,
+            ChartColors.ma10Color);
+      }
     }
   }
 

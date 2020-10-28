@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     final charts = [
       SingleMainChartState(isLine: this.line, state: MainState.NONE),
-      SingleVolChartState(),
+      SingleVolChartState(renderMA: true),
       SingleSecondaryChartState(
         state: SecondaryState.MACD,
       ),
