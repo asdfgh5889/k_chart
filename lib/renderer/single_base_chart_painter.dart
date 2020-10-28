@@ -15,7 +15,8 @@ import '../entity/volume_entity.dart';
 import '../entity/macd_entity.dart';
 import '../entity/candle_entity.dart';
 
-typedef MaxMinValueCalculator(KLineEntity item, int i, SingleBaseChartPainter painter);
+typedef MaxMinValueCalculator(
+    KLineEntity item, int i, SingleBaseChartPainter painter);
 
 abstract class SingleBaseChartPainter extends CustomPainter {
   static double maxScrollX = 0.0;
@@ -23,6 +24,7 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   List<KLineEntity> data;
   double scaleX = 1.0, scrollX = 0.0, selectX;
   bool isLongPress = false;
+  double paddingRight = 0;
 
   Rect mRect;
   double mDisplayHeight, mWidth;
@@ -32,12 +34,21 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   double mMaxValue = double.minPositive, mMinValue = double.maxFinite;
   double mTranslateX = double.minPositive;
   int mMaxIndex = 0, mMinIndex = 0;
-  double mHighMaxValue = double.minPositive,
-      mLowMinValue = double.maxFinite;
+  double mHighMaxValue = double.minPositive, mLowMinValue = double.maxFinite;
   int mItemCount = 0;
   double mDataLen = 0.0; //Data accounts for the total length of the screen
   double mPointWidth = ChartStyle.pointWidth;
-  List<String> mFormats = [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn]; //Format time
+  List<String> mFormats = [
+    yyyy,
+    '-',
+    mm,
+    '-',
+    dd,
+    ' ',
+    HH,
+    ':',
+    nn
+  ]; //Format time
 
   SingleBaseChartPainter({
     @required this.data,
@@ -46,6 +57,7 @@ abstract class SingleBaseChartPainter extends CustomPainter {
     @required this.isLongPress,
     @required this.selectX,
     @required this.state,
+    this.paddingRight,
   }) {
     mItemCount = data?.length ?? 0;
     mDataLen = mItemCount * mPointWidth;
@@ -81,11 +93,11 @@ abstract class SingleBaseChartPainter extends CustomPainter {
     canvas.save();
     canvas.scale(1, 1);
     drawBg(canvas, size);
-    drawGrid(canvas);
+    drawGrid(canvas, size);
     if (data != null && data.isNotEmpty) {
       drawChart(canvas, size);
       drawRightText(canvas);
-      drawDate(canvas, size);
+      drawDate(canvas, Size(size.width - this.paddingRight, size.height));
       if (isLongPress == true) drawCrossLineText(canvas, size);
       drawText(canvas, data?.last, 5);
       drawMaxAndMin(canvas);
@@ -99,7 +111,7 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   void drawBg(Canvas canvas, Size size);
 
   //Grid
-  void drawGrid(canvas);
+  void drawGrid(Canvas canvas, Size size);
 
   //Chart
   void drawChart(Canvas canvas, Size size);
@@ -120,7 +132,8 @@ abstract class SingleBaseChartPainter extends CustomPainter {
   void drawCrossLineText(Canvas canvas, Size size);
 
   void initRect(Size size) {
-    mRect = Rect.fromLTRB(0, mTopPadding, mWidth, mTopPadding + mDisplayHeight);
+    mRect = Rect.fromLTRB(0, mTopPadding, mWidth - this.paddingRight,
+        mTopPadding + mDisplayHeight);
   }
 
   calculateValue() {
@@ -128,7 +141,7 @@ abstract class SingleBaseChartPainter extends CustomPainter {
     maxScrollX = getMinTranslateX().abs();
     setTranslateXFromScrollX(scrollX);
     mStartIndex = indexOfTranslateX(xToTranslateX(0));
-    mStopIndex = indexOfTranslateX(xToTranslateX(mWidth));
+    mStopIndex = indexOfTranslateX(xToTranslateX(mWidth - this.paddingRight));
     for (int i = mStartIndex; i <= mStopIndex; i++) {
       var item = data[i];
       this.state.maxMinValue(item, i, this);
@@ -199,7 +212,7 @@ abstract class SingleBaseChartPainter extends CustomPainter {
 
   ///获取平移的最小值
   double getMinTranslateX() {
-    var x = -mDataLen + mWidth / scaleX - mPointWidth / 2;
+    var x = -mDataLen + (mWidth - this.paddingRight) / scaleX - mPointWidth / 2;
     return x >= 0 ? 0.0 : x;
   }
 
@@ -254,69 +267,67 @@ class SingleMainChartState extends SingleBaseChartState {
   bool get drawCrossLine => true;
   bool get drawMinMax => !isLine;
 
-  SingleMainChartState({
-    this.state = MainState.NONE,
-    this.isLine = false,
-    this.maDayList = const [5, 10, 20],
-    Size size
-  }): this._size = size;
+  SingleMainChartState(
+      {this.state = MainState.NONE,
+      this.isLine = false,
+      this.maDayList = const [5, 10, 20],
+      Size size})
+      : this._size = size;
 
-  SingleMainChartState copyWith({
-    bool isLine,
-    MainState state,
-    List<int> maDayList,
-    Size size
-  }) => SingleMainChartState(
-    isLine: isLine ?? this.isLine,
-    size: size ?? this._size,
-    state: state ?? this.state,
-    maDayList: maDayList ?? this.maDayList
-  );
+  SingleMainChartState copyWith(
+          {bool isLine, MainState state, List<int> maDayList, Size size}) =>
+      SingleMainChartState(
+          isLine: isLine ?? this.isLine,
+          size: size ?? this._size,
+          state: state ?? this.state,
+          maDayList: maDayList ?? this.maDayList);
 
   @override
   BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength) {
-    return MainRenderer(rect, maxValue, minValue, topPadding, state, isLine, fixedLength, maDayList);
+    return MainRenderer(rect, maxValue, minValue, topPadding, state, isLine,
+        fixedLength, maDayList);
   }
 
   @override
-  MaxMinValueCalculator get maxMinValue => (KLineEntity item, int i, SingleBaseChartPainter painter) {
-    if (isLine == true) {
-      painter.mMaxValue = max(painter.mMaxValue, item.close);
-      painter.mMinValue = min(painter.mMinValue, item.close);
-    } else {
-      double maxPrice, minPrice;
-      if (state == MainState.MA) {
-        maxPrice = max(item.high, painter._findMaxMA(item.maValueList));
-        minPrice = min(item.low, painter._findMinMA(item.maValueList));
-      } else if (state == MainState.BOLL) {
-        maxPrice = max(item.up ?? 0, item.high);
-        minPrice = min(item.dn ?? 0, item.low);
-      } else {
-        maxPrice = item.high;
-        minPrice = item.low;
-      }
-      painter.mMaxValue = max(painter.mMaxValue, maxPrice);
-      painter.mMinValue = min(painter.mMinValue, minPrice);
+  MaxMinValueCalculator get maxMinValue =>
+      (KLineEntity item, int i, SingleBaseChartPainter painter) {
+        if (isLine == true) {
+          painter.mMaxValue = max(painter.mMaxValue, item.close);
+          painter.mMinValue = min(painter.mMinValue, item.close);
+        } else {
+          double maxPrice, minPrice;
+          if (state == MainState.MA) {
+            maxPrice = max(item.high, painter._findMaxMA(item.maValueList));
+            minPrice = min(item.low, painter._findMinMA(item.maValueList));
+          } else if (state == MainState.BOLL) {
+            maxPrice = max(item.up ?? 0, item.high);
+            minPrice = min(item.dn ?? 0, item.low);
+          } else {
+            maxPrice = item.high;
+            minPrice = item.low;
+          }
+          painter.mMaxValue = max(painter.mMaxValue, maxPrice);
+          painter.mMinValue = min(painter.mMinValue, minPrice);
 
-      if (painter.mHighMaxValue < item.high) {
-        painter.mHighMaxValue = item.high;
-        painter.mMaxIndex = i;
-      }
-      if (painter.mLowMinValue > item.low) {
-        painter.mLowMinValue = item.low;
-        painter.mMinIndex = i;
-      }
-    }
-  };
+          if (painter.mHighMaxValue < item.high) {
+            painter.mHighMaxValue = item.high;
+            painter.mMaxIndex = i;
+          }
+          if (painter.mLowMinValue > item.low) {
+            painter.mLowMinValue = item.low;
+            painter.mMinIndex = i;
+          }
+        }
+      };
 
   @override
   SingleBaseChartState clone() => SingleMainChartState(
-    size: Size.copy(this.size),
-    state: this.state,
-    isLine: this.isLine,
-    maDayList: List.from(this.maDayList),
-  );
+        size: Size.copy(this.size),
+        state: this.state,
+        isLine: this.isLine,
+        maDayList: List.from(this.maDayList),
+      );
 }
 
 class SingleSecondaryChartState extends SingleBaseChartState {
@@ -329,42 +340,48 @@ class SingleSecondaryChartState extends SingleBaseChartState {
   SingleSecondaryChartState({
     this.state = SecondaryState.MACD,
     Size size,
-  }): _size = size;
+  }) : _size = size;
 
   @override
   BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength) {
-    return SecondaryRenderer(rect, maxValue, minValue, topPadding, state, fixedLength);
+    return SecondaryRenderer(
+        rect, maxValue, minValue, topPadding, state, fixedLength);
   }
 
-  MaxMinValueCalculator get maxMinValue => (KLineEntity item, int i, SingleBaseChartPainter painter) {
-    if (state == SecondaryState.MACD) {
-      painter.mMaxValue = max(painter.mMaxValue, max(item.macd, max(item.dif, item.dea)));
-      painter.mMinValue = min(painter.mMinValue, min(item.macd, min(item.dif, item.dea)));
-    } else if (state == SecondaryState.KDJ) {
-      if (item.d != null) {
-        painter.mMaxValue = max(painter.mMaxValue, max(item.k, max(item.d, item.j)));
-        painter.mMinValue = min(painter.mMinValue, min(item.k, min(item.d, item.j)));
-      }
-    } else if (state == SecondaryState.RSI) {
-      if (item.rsi != null) {
-        painter.mMaxValue = max(painter.mMaxValue, item.rsi);
-        painter.mMinValue = min(painter.mMinValue, item.rsi);
-      }
-    } else if (state == SecondaryState.WR) {
-      painter.mMaxValue = 0;
-      painter.mMinValue = -100;
-    } else {
-      painter.mMaxValue = 0;
-      painter.mMinValue = 0;
-    }
-  };
+  MaxMinValueCalculator get maxMinValue =>
+      (KLineEntity item, int i, SingleBaseChartPainter painter) {
+        if (state == SecondaryState.MACD) {
+          painter.mMaxValue =
+              max(painter.mMaxValue, max(item.macd, max(item.dif, item.dea)));
+          painter.mMinValue =
+              min(painter.mMinValue, min(item.macd, min(item.dif, item.dea)));
+        } else if (state == SecondaryState.KDJ) {
+          if (item.d != null) {
+            painter.mMaxValue =
+                max(painter.mMaxValue, max(item.k, max(item.d, item.j)));
+            painter.mMinValue =
+                min(painter.mMinValue, min(item.k, min(item.d, item.j)));
+          }
+        } else if (state == SecondaryState.RSI) {
+          if (item.rsi != null) {
+            painter.mMaxValue = max(painter.mMaxValue, item.rsi);
+            painter.mMinValue = min(painter.mMinValue, item.rsi);
+          }
+        } else if (state == SecondaryState.WR) {
+          painter.mMaxValue = 0;
+          painter.mMinValue = -100;
+        } else {
+          painter.mMaxValue = 0;
+          painter.mMinValue = 0;
+        }
+      };
 
   @override
   SingleBaseChartState clone() => SingleSecondaryChartState(
-    state: this.state,
-    size: Size.copy(this.size),
-  );
+        state: this.state,
+        size: Size.copy(this.size),
+      );
 }
 
 class SingleVolChartState extends SingleBaseChartState {
@@ -373,7 +390,7 @@ class SingleVolChartState extends SingleBaseChartState {
   @override
   set size(Size s) => this._size = s;
 
-  SingleVolChartState({Size size}): _size = size;
+  SingleVolChartState({Size size}) : _size = size;
 
   @override
   BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
@@ -381,13 +398,16 @@ class SingleVolChartState extends SingleBaseChartState {
     return VolRenderer(rect, maxValue, minValue, topPadding, fixedLength);
   }
 
-  MaxMinValueCalculator get maxMinValue => (KLineEntity item, int i, SingleBaseChartPainter painter) {
-    painter.mMaxValue = max(painter.mMaxValue, max(item.vol, max(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
-    painter.mMinValue = min(painter.mMinValue, min(item.vol, min(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
-  };
+  MaxMinValueCalculator get maxMinValue =>
+      (KLineEntity item, int i, SingleBaseChartPainter painter) {
+        painter.mMaxValue = max(painter.mMaxValue,
+            max(item.vol, max(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
+        painter.mMinValue = min(painter.mMinValue,
+            min(item.vol, min(item.MA5Volume ?? 0, item.MA10Volume ?? 0)));
+      };
 
   @override
   SingleBaseChartState clone() => SingleVolChartState(
-    size: Size.copy(this.size),
-  );
+        size: Size.copy(this.size),
+      );
 }

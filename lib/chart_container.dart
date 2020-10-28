@@ -32,24 +32,35 @@ class ChartContainer extends StatefulWidget {
   final bool resizeMode;
   final Color dividerColor;
 
-  ChartContainer(this.data, {
-    Key key,
-    this.states,
-    this.order,
-    this.onReorder,
-    this.onResize,
-    this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
-    this.onLoadMore,
-    this.bgColor,
-    this.fixedLength,
-    this.flingTime = 600,
-    this.flingRatio = 0.5,
-    this.flingCurve = Curves.decelerate,
-    this.isOnDrag,
-    this.dividerColor = const Color(0xff2D4158),
-    this.orderMode = false,
-    this.resizeMode = false
-  }): super(key: key);
+  final bool showLatestValue;
+  final Color latestValueColor;
+  final double latestValueWidth;
+  final Color latestValueTextColor;
+  final double paddingRight;
+
+  ChartContainer(this.data,
+      {Key key,
+      this.paddingRight,
+      this.states,
+      this.order,
+      this.onReorder,
+      this.onResize,
+      this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
+      this.onLoadMore,
+      this.bgColor,
+      this.fixedLength,
+      this.flingTime = 600,
+      this.flingRatio = 0.5,
+      this.flingCurve = Curves.decelerate,
+      this.isOnDrag,
+      this.showLatestValue,
+      this.latestValueColor,
+      this.latestValueWidth,
+      this.latestValueTextColor,
+      this.dividerColor = const Color(0xff2D4158),
+      this.orderMode = false,
+      this.resizeMode = false})
+      : super(key: key);
 
   @override
   _ChartContainerState createState() => _ChartContainerState();
@@ -97,23 +108,29 @@ class _ChartContainerState extends State<ChartContainer>
       mScaleX = 1.0;
     }
 
-    final editMode =  this.widget.orderMode || this.widget.resizeMode;
+    final editMode = this.widget.orderMode || this.widget.resizeMode;
 
     return GestureDetector(
-      onHorizontalDragDown: editMode ? null : (details) {
-        _stopAnimation();
-        _onDragChanged(true);
-      },
-      onHorizontalDragUpdate: editMode ? null : (details) {
-        if (isScale || isLongPress) return;
-        mScrollX = (details.primaryDelta / mScaleX + mScrollX)
-            .clamp(0.0, SingleBaseChartPainter.maxScrollX);
-        notifyChanged();
-      },
-      onHorizontalDragEnd: editMode ? null : (DragEndDetails details) {
-        var velocity = details.velocity.pixelsPerSecond.dx;
-        _onFling(velocity);
-      },
+      onHorizontalDragDown: editMode
+          ? null
+          : (details) {
+              _stopAnimation();
+              _onDragChanged(true);
+            },
+      onHorizontalDragUpdate: editMode
+          ? null
+          : (details) {
+              if (isScale || isLongPress) return;
+              mScrollX = (details.primaryDelta / mScaleX + mScrollX)
+                  .clamp(0.0, SingleBaseChartPainter.maxScrollX);
+              notifyChanged();
+            },
+      onHorizontalDragEnd: editMode
+          ? null
+          : (DragEndDetails details) {
+              var velocity = details.velocity.pixelsPerSecond.dx;
+              _onFling(velocity);
+            },
       onHorizontalDragCancel: () => _onDragChanged(false),
       onScaleStart: (_) {
         isScale = true;
@@ -127,30 +144,34 @@ class _ChartContainerState extends State<ChartContainer>
         isScale = false;
         _lastScale = mScaleX;
       },
-      onLongPressStart: editMode ? null : (details) {
-        isLongPress = true;
-        if (mSelectX != details.globalPosition.dx) {
-          mSelectX = details.globalPosition.dx;
-          notifyChanged();
-        }
-      },
-      onLongPressMoveUpdate: editMode ? null : (details) {
-        if (mSelectX != details.globalPosition.dx) {
-          mSelectX = details.globalPosition.dx;
-          notifyChanged();
-        }
-      },
-      onLongPressEnd: editMode ? null : (details) {
-        isLongPress = false;
-        mInfoWindowStream?.sink?.add(null);
-        notifyChanged();
-      },
+      onLongPressStart: editMode
+          ? null
+          : (details) {
+              isLongPress = true;
+              if (mSelectX != details.globalPosition.dx) {
+                mSelectX = details.globalPosition.dx;
+                notifyChanged();
+              }
+            },
+      onLongPressMoveUpdate: editMode
+          ? null
+          : (details) {
+              if (mSelectX != details.globalPosition.dx) {
+                mSelectX = details.globalPosition.dx;
+                notifyChanged();
+              }
+            },
+      onLongPressEnd: editMode
+          ? null
+          : (details) {
+              isLongPress = false;
+              mInfoWindowStream?.sink?.add(null);
+              notifyChanged();
+            },
       child: Container(
         color: ChartColors.bgColor,
-        child: PageStorage(
-            bucket: this._bucket,
-            child: _buildChartList(context)
-        ),
+        child:
+            PageStorage(bucket: this._bucket, child: _buildChartList(context)),
       ),
     );
   }
@@ -165,8 +186,13 @@ class _ChartContainerState extends State<ChartContainer>
     } else {
       return ListView(
         key: PageStorageKey("chart_list"),
-        children: this.widget.order.map((k) => this.widget.resizeMode
-            ? _buildEditableChart(k) : _buildSingleChart(k)).toList(),
+        children: this
+            .widget
+            .order
+            .map((k) => this.widget.resizeMode
+                ? _buildEditableChart(k)
+                : _buildSingleChart(k))
+            .toList(),
       );
     }
   }
@@ -190,23 +216,20 @@ class _ChartContainerState extends State<ChartContainer>
                     height: 40,
                     child: Container(
                       decoration: BoxDecoration(
-                          color: Color(0xff18191d),//this.widget.dividerColor.withOpacity(0.5),
+                          color: Color(
+                              0xff18191d), //this.widget.dividerColor.withOpacity(0.5),
                           border: Border(
                             top: BorderSide(
-                                color: this.widget.dividerColor,
-                                width: 1
-                            ),
+                                color: this.widget.dividerColor, width: 1),
                             left: BorderSide(
-                                color: this.widget.dividerColor,
-                                width: 1
-                            ),
+                                color: this.widget.dividerColor, width: 1),
                             right: BorderSide(
-                                color: this.widget.dividerColor,
-                                width: 1
-                            ),
-                          )
+                                color: this.widget.dividerColor, width: 1),
+                          )),
+                      child: Icon(
+                        Icons.reorder,
+                        color: Colors.white,
                       ),
-                      child: Icon(Icons.reorder, color: Colors.white,),
                     ),
                   ),
                 ),
@@ -225,7 +248,9 @@ class _ChartContainerState extends State<ChartContainer>
                       },
                       onUpdate: (dy) {
                         if (_resizeHeight + dy > 100) {
-                          this.widget.onResize(k, this.widget.states[k].size.height,
+                          this.widget.onResize(
+                              k,
+                              this.widget.states[k].size.height,
                               _resizeHeight + dy);
                         }
                       },
@@ -236,26 +261,23 @@ class _ChartContainerState extends State<ChartContainer>
                         height: 40,
                         width: constraint.maxWidth,
                         decoration: BoxDecoration(
-                          color: this._isResizing == k ? Color(0xff0B0E1A) : Color(0xff18191d),
+                            color: this._isResizing == k
+                                ? Color(0xff0B0E1A)
+                                : Color(0xff18191d),
                             border: Border(
                               top: BorderSide(
-                                  color: this.widget.dividerColor,
-                                  width: 1
-                              ),
+                                  color: this.widget.dividerColor, width: 1),
                               left: BorderSide(
-                                  color: this.widget.dividerColor,
-                                  width: 1
-                              ),
+                                  color: this.widget.dividerColor, width: 1),
                               right: BorderSide(
-                                  color: this.widget.dividerColor,
-                                  width: 1
-                              ),
-                            )
+                                  color: this.widget.dividerColor, width: 1),
+                            )),
+                        child: Icon(
+                          Icons.unfold_more,
+                          color: Colors.white,
                         ),
-                        child: Icon(Icons.unfold_more, color: Colors.white,),
                       ),
-                    )
-                )
+                    ))
             ],
           );
         },
@@ -285,6 +307,11 @@ class _ChartContainerState extends State<ChartContainer>
               sink: mInfoWindowStream?.sink,
               bgColor: widget.bgColor,
               fixedLength: widget.fixedLength,
+              showLatestValue: this.widget.showLatestValue,
+              latestValueColor: this.widget.latestValueColor,
+              latestValueWidth: this.widget.latestValueWidth,
+              latestValueTextColor: this.widget.latestValueTextColor,
+              paddingRight: this.widget.paddingRight,
             ),
           ),
         );
@@ -315,7 +342,7 @@ class _ChartContainerState extends State<ChartContainer>
     aniX = null;
     aniX = Tween<double>(begin: mScrollX, end: x * widget.flingRatio + mScrollX)
         .animate(
-        CurvedAnimation(parent: _controller, curve: widget.flingCurve));
+            CurvedAnimation(parent: _controller, curve: widget.flingCurve));
     aniX.addListener(() {
       mScrollX = aniX.value;
       if (mScrollX <= 0) {
@@ -436,7 +463,8 @@ class _Resizable extends StatefulWidget {
   final Function(PointerUpEvent) onEnd;
   final Widget child;
 
-  _Resizable({Key key, this.child, this.onStart, this.onUpdate, this.onEnd}) : super(key: key);
+  _Resizable({Key key, this.child, this.onStart, this.onUpdate, this.onEnd})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ResizableState();

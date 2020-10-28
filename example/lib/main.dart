@@ -63,9 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     final charts = [
       SingleMainChartState(isLine: this.line, state: MainState.NONE),
-      SingleMainChartState(isLine: this.line, state: MainState.BOLL),
       SingleVolChartState(),
-      SingleSecondaryChartState(state: SecondaryState.MACD,),
+      SingleSecondaryChartState(
+        state: SecondaryState.MACD,
+      ),
       SingleSecondaryChartState(state: SecondaryState.KDJ),
       SingleSecondaryChartState(state: SecondaryState.RSI),
       SingleSecondaryChartState(state: SecondaryState.WR),
@@ -140,9 +141,8 @@ class _MyHomePageState extends State<MyHomePage> {
               });
               if (key != null) {
                 setState(() {
-                  this.states[key] = (this.states[key] as SingleMainChartState).copyWith(
-                    isLine: this.line
-                  );
+                  this.states[key] = (this.states[key] as SingleMainChartState)
+                      .copyWith(isLine: this.line);
                 });
               }
             },
@@ -161,8 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onReorder: (int oldIndex, int newIndex) {
             final Key item = this.order.removeAt(oldIndex);
             this.order.insert(newIndex, item);
-            setState(() {
-            });
+            setState(() {});
           },
           onResize: (k, oldHeight, newHeight) {
             setState(() {
@@ -171,6 +170,11 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           states: this.states,
           order: this.order,
+          showLatestValue: true,
+          latestValueColor: Colors.amber,
+          latestValueTextColor: Colors.white,
+          latestValueWidth: 2,
+          paddingRight: 70,
         ),
       ),
     );
