@@ -51,17 +51,16 @@ class VolRenderer extends BaseChartRenderer<VolumeEntity> {
 
   @override
   void drawText(Canvas canvas, VolumeEntity data, double x) {
-    if (!this.renderMA) return;
     TextSpan span = TextSpan(
       children: [
         TextSpan(
             text: "VOL:${NumberUtil.format(data.vol)}    ",
             style: getTextStyle(ChartColors.volColor)),
-        if (NumberUtil.checkNotNullOrZero(data.MA5Volume))
+        if (this.renderMA && NumberUtil.checkNotNullOrZero(data.MA5Volume))
           TextSpan(
               text: "MA5:${NumberUtil.format(data.MA5Volume)}    ",
               style: getTextStyle(ChartColors.ma5Color)),
-        if (NumberUtil.checkNotNullOrZero(data.MA10Volume))
+        if (this.renderMA && NumberUtil.checkNotNullOrZero(data.MA10Volume))
           TextSpan(
               text: "MA10:${NumberUtil.format(data.MA10Volume)}    ",
               style: getTextStyle(ChartColors.ma10Color)),
