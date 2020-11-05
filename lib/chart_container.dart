@@ -37,30 +37,33 @@ class ChartContainer extends StatefulWidget {
   final double latestValueWidth;
   final Color latestValueTextColor;
   final double paddingRight;
+  final List<TargetPriceModel> targetPrices;
 
-  ChartContainer(this.data,
-      {Key key,
-      this.paddingRight,
-      this.states,
-      this.order,
-      this.onReorder,
-      this.onResize,
-      this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
-      this.onLoadMore,
-      this.bgColor,
-      this.fixedLength,
-      this.flingTime = 600,
-      this.flingRatio = 0.5,
-      this.flingCurve = Curves.decelerate,
-      this.isOnDrag,
-      this.showLatestValue,
-      this.latestValueColor,
-      this.latestValueWidth,
-      this.latestValueTextColor,
-      this.dividerColor = const Color(0xff2D4158),
-      this.orderMode = false,
-      this.resizeMode = false})
-      : super(key: key);
+  ChartContainer(
+    this.data, {
+    Key key,
+    this.targetPrices,
+    this.paddingRight,
+    this.states,
+    this.order,
+    this.onReorder,
+    this.onResize,
+    this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
+    this.onLoadMore,
+    this.bgColor,
+    this.fixedLength,
+    this.flingTime = 600,
+    this.flingRatio = 0.5,
+    this.flingCurve = Curves.decelerate,
+    this.isOnDrag,
+    this.showLatestValue,
+    this.latestValueColor,
+    this.latestValueWidth,
+    this.latestValueTextColor,
+    this.dividerColor = const Color(0xff2D4158),
+    this.orderMode = false,
+    this.resizeMode = false,
+  }) : super(key: key);
 
   @override
   _ChartContainerState createState() => _ChartContainerState();
@@ -312,6 +315,7 @@ class _ChartContainerState extends State<ChartContainer>
               latestValueWidth: this.widget.latestValueWidth,
               latestValueTextColor: this.widget.latestValueTextColor,
               paddingRight: this.widget.paddingRight,
+              targetPrices: this.widget.targetPrices,
             ),
           ),
         );

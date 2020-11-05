@@ -13,6 +13,14 @@ import 'main_renderer.dart';
 import 'secondary_renderer.dart';
 import 'vol_renderer.dart';
 
+class TargetPriceModel {
+  final Color color;
+  final Color textColor;
+  final double price;
+
+  TargetPriceModel(this.price, this.color, this.textColor);
+}
+
 class SingleChartPainter extends SingleBaseChartPainter {
   static get maxScrollX => SingleBaseChartPainter.maxScrollX;
   BaseChartRenderer renderer;
@@ -25,6 +33,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
   final Color latestValueColor;
   final double latestValueWidth;
   final Color latestValueTextColor;
+  final List<TargetPriceModel> targetPrices;
 
   SingleChartPainter({
     @required data,
@@ -33,6 +42,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
     @required isLongPass,
     @required double selectX,
     @required SingleBaseChartState state,
+    this.targetPrices,
     this.showLatestValue = false,
     this.latestValueColor = Colors.amber,
     this.latestValueWidth = 2,
@@ -127,6 +137,16 @@ class SingleChartPainter extends SingleBaseChartPainter {
           width: this.latestValueWidth);
     }
 
+    if (this.targetPrices != null) {
+      for (int i = 0; i < this.targetPrices.length; i++) {
+        drawCrossLine(canvas, size, this.data.length - 1,
+            drawVertical: false,
+            color: this.targetPrices[i].color,
+            width: this.latestValueWidth,
+            targetPrice: this.targetPrices[i].price);
+      }
+    }
+
     if (isLongPress == true) {
       var index = calculateSelectedX(selectX);
       drawCrossLine(canvas, size, index);
@@ -138,6 +158,16 @@ class SingleChartPainter extends SingleBaseChartPainter {
           drawDate: false,
           tagColor: this.latestValueColor,
           textColor: this.latestValueTextColor);
+    }
+
+    if (this.targetPrices != null) {
+      for (int i = 0; i < this.targetPrices.length; i++) {
+        drawCrossLineTextFor(canvas, size, this.data.length - 1,
+            drawDate: false,
+            tagColor: this.targetPrices[i].color,
+            textColor: this.targetPrices[i].textColor,
+            targetPrice: this.targetPrices[i].price);
+      }
     }
   }
 
@@ -196,18 +226,20 @@ class SingleChartPainter extends SingleBaseChartPainter {
     bool drawDate = true,
     Color textColor,
     Color tagColor,
+    double targetPrice,
   }) {
     canvas.save();
     KLineEntity point = getItem(index);
 
-    TextPainter tp = getTextPainter(point.close, textColor ?? Colors.white);
+    TextPainter tp =
+        getTextPainter(targetPrice ?? point.close, textColor ?? Colors.white);
     double textHeight = tp.height;
     double textWidth = tp.width;
 
     double w1 = 5;
     double w2 = 3;
     double r = textHeight / 2 + w2;
-    double y = getMainY(point.close);
+    double y = getMainY(targetPrice ?? point.close);
     double x;
     bool isLeft = false;
     final selectPointPaint = Paint()
@@ -337,12 +369,13 @@ class SingleChartPainter extends SingleBaseChartPainter {
     bool drawVertical = true,
     Color color,
     double width,
+    double targetPrice,
   }) {
     //var index = calculateSelectedX(selectX);
     KLineEntity point = getItem(index);
 
     double x = getX(index);
-    double y = getMainY(point.close);
+    double y = getMainY(targetPrice ?? point.close);
 
     if (y < this.mTopPadding) {
       y = this.mTopPadding;
@@ -371,7 +404,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
       // k线图横线
       canvas.drawLine(Offset(-mTranslateX, y),
           Offset(-mTranslateX + mWidth / scaleX, y), paintX);
-      canvas.drawCircle(Offset(x, y), 2.0, paintX);
+      if (targetPrice == null) canvas.drawCircle(Offset(x, y), 2.0, paintX);
     }
   }
 

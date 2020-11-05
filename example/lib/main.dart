@@ -170,6 +170,10 @@ class _MyHomePageState extends State<MyHomePage> {
           latestValueTextColor: Colors.white,
           latestValueWidth: 2,
           paddingRight: 70,
+          targetPrices: [
+            TargetPriceModel(12000, Colors.red, Colors.white),
+            TargetPriceModel(13000, Colors.green, Colors.white),
+          ],
         ),
       ),
     );
