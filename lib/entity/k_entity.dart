@@ -1,3 +1,5 @@
+import 'package:k_chart/entity/vwap_entity.dart';
+
 import 'candle_entity.dart';
 import 'kdj_entity.dart';
 import 'macd_entity.dart';
@@ -12,4 +14,5 @@ class KEntity
         KDJEntity,
         RSIEntity,
         WREntity,
+        VWAPEntity,
         MACDEntity {}

@@ -15,6 +15,15 @@ class DataUtil {
     calcMACD(dataList);
     calcRSI(dataList);
     calcWR(dataList);
+    calcVWAP(dataList);
+  }
+
+  static calcVWAP(List<KLineEntity> dataList) {
+    for (int i = 0; i < dataList.length; i++) {
+      final entity = dataList[i];
+      final averagePrice = (entity.high + entity.low + entity.close) / 3;
+      entity.vwap = (averagePrice * entity.vol) / entity.amount;
+    }
   }
 
   static calcMA(List<KLineEntity> dataList, List<int> maDayList) {

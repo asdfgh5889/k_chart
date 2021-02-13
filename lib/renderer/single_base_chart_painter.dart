@@ -378,6 +378,9 @@ class SingleSecondaryChartState extends SingleBaseChartState {
         } else if (state == SecondaryState.WR) {
           painter.mMaxValue = 0;
           painter.mMinValue = -100;
+        } else if (state == SecondaryState.VWAP) {
+          painter.mMaxValue = max(painter.mMaxValue, item.vwap);
+          painter.mMinValue = min(painter.mMinValue, item.vwap);
         } else {
           painter.mMaxValue = 0;
           painter.mMinValue = 0;

@@ -38,10 +38,12 @@ class ChartContainer extends StatefulWidget {
   final Color latestValueTextColor;
   final double paddingRight;
   final List<TargetPriceModel> targetPrices;
+  final ScrollPhysics scrollPhysics;
 
   ChartContainer(
     this.data, {
     Key key,
+    this.scrollPhysics,
     this.targetPrices,
     this.paddingRight,
     this.states,
@@ -188,6 +190,7 @@ class _ChartContainerState extends State<ChartContainer>
       );
     } else {
       return ListView(
+        physics: this.widget.scrollPhysics,
         key: PageStorageKey("chart_list"),
         children: this
             .widget

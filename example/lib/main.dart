@@ -62,9 +62,9 @@ class _MyHomePageState extends State<MyHomePage> {
       initDepth(bids, asks);
     });
     final charts = [
-      SingleMainChartState(isLine: this.line, state: MainState.NONE),
-      SingleVolChartState(renderMA: false),
-      SingleSecondaryChartState(state: SecondaryState.WR),
+      SingleMainChartState(isLine: this.line, state: MainState.BOLL),
+      // SingleVolChartState(renderMA: false),
+      SingleSecondaryChartState(state: SecondaryState.VWAP),
     ];
     this.order = List.generate(charts.length, (i) => UniqueKey());
     this.states = Map();
@@ -170,10 +170,6 @@ class _MyHomePageState extends State<MyHomePage> {
           latestValueTextColor: Colors.white,
           latestValueWidth: 2,
           paddingRight: 70,
-          targetPrices: [
-            TargetPriceModel(12000, Colors.red, Colors.white),
-            TargetPriceModel(13000, Colors.green, Colors.white),
-          ],
         ),
       ),
     );

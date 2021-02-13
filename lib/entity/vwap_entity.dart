@@ -1,0 +1,3 @@
+mixin VWAPEntity {
+  double vwap;
+}

@@ -42,6 +42,10 @@ class SecondaryRenderer extends BaseChartRenderer<MACDEntity> {
         drawLine(
             lastPoint.r, curPoint.r, canvas, lastX, curX, ChartColors.rsiColor);
         break;
+      case SecondaryState.VWAP:
+        drawLine(lastPoint.vwap, curPoint.vwap, canvas, lastX, curX,
+            ChartColors.rsiColor);
+        break;
       default:
         break;
     }
