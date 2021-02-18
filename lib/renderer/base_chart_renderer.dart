@@ -50,8 +50,15 @@ abstract class BaseChartRenderer<T> {
   void drawRightText(
       Canvas canvas, Rect backgroundRect, TextStyle textStyle, int gridRows);
 
-  void drawChart(T lastPoint, T curPoint, double lastX, double curX, Size size,
-      Canvas canvas);
+  void drawChart(
+    T lastPoint,
+    T curPoint,
+    double lastX,
+    double curX,
+    Size size,
+    Canvas canvas, [
+    Color color,
+  ]);
 
   void drawLine(double lastPrice, double curPrice, Canvas canvas, double lastX,
       double curX, Color color) {

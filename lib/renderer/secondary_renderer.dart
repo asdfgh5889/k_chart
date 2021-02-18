@@ -20,8 +20,15 @@ class SecondaryRenderer extends BaseChartRenderer<MACDEntity> {
             fixedLength: fixedLength);
 
   @override
-  void drawChart(MACDEntity lastPoint, MACDEntity curPoint, double lastX,
-      double curX, Size size, Canvas canvas) {
+  void drawChart(
+    MACDEntity lastPoint,
+    MACDEntity curPoint,
+    double lastX,
+    double curX,
+    Size size,
+    Canvas canvas, [
+    Color color,
+  ]) {
     switch (state) {
       case SecondaryState.MACD:
         drawMACD(curPoint, canvas, curX, lastPoint, lastX);

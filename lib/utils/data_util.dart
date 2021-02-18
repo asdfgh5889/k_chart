@@ -19,10 +19,29 @@ class DataUtil {
   }
 
   static calcVWAP(List<KLineEntity> dataList) {
+    final maxCandles = 14;
     for (int i = 0; i < dataList.length; i++) {
       final entity = dataList[i];
-      final averagePrice = (entity.high + entity.low + entity.close) / 3;
-      entity.vwap = (averagePrice * entity.vol) / entity.amount;
+      final typicalPrice = (entity.high + entity.low + entity.close) / 3;
+      if (i == 0) {
+        entity.cumulativePrice = typicalPrice * entity.amount;
+        entity.cumulativeVol = entity.amount;
+      } else {
+        final prev = dataList[i - 1];
+        entity.cumulativePrice =
+            prev.cumulativePrice + typicalPrice * entity.amount;
+        entity.cumulativeVol = prev.cumulativeVol + entity.amount;
+      }
+
+      if (i > maxCandles) {
+        final lastEntity = dataList[i - maxCandles];
+        final lastTypicalPrice =
+            (lastEntity.high + lastEntity.low + lastEntity.close) / 3;
+        entity.cumulativePrice -= lastTypicalPrice * lastEntity.amount;
+        entity.cumulativeVol -= lastEntity.amount;
+      }
+
+      entity.vwap = entity.cumulativePrice / entity.cumulativeVol;
     }
   }
 

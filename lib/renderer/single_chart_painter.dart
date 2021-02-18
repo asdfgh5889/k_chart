@@ -35,12 +35,24 @@ class SingleChartPainter extends SingleBaseChartPainter {
   final Color latestValueTextColor;
   final List<TargetPriceModel> targetPrices;
 
+  static List<KLineEntity> processData(
+    SingleBaseChartState state,
+    List<KLineEntity> data,
+  ) {
+    if (state is SingleMainChartState && state.extrapolation != null) {
+      final processed = data.map((e) => e).toList();
+      processed.addAll(state.extrapolation);
+      return processed;
+    }
+    return data;
+  }
+
   SingleChartPainter({
-    @required data,
     @required scaleX,
     @required scrollX,
     @required isLongPass,
     @required double selectX,
+    @required List<KLineEntity> data,
     @required SingleBaseChartState state,
     this.targetPrices,
     this.showLatestValue = false,
@@ -54,7 +66,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
     this.fixedLength,
   })  : assert(bgColor == null || bgColor.length >= 2),
         super(
-          data: data,
+          data: processData(state, data),
           scaleX: scaleX,
           scrollX: scrollX,
           isLongPress: isLongPass,
@@ -121,17 +133,46 @@ class SingleChartPainter extends SingleBaseChartPainter {
     canvas.save();
     canvas.translate((mTranslateX) * scaleX, 0.0);
     canvas.scale(scaleX, 1.0);
+    final state = this.state;
+    bool isExtrapolated = false;
+    int extrapolationLength = 0;
+    if (state is SingleMainChartState && state.extrapolation != null) {
+      extrapolationLength = state.extrapolation.length;
+    }
+
     for (int i = mStartIndex; data != null && i <= mStopIndex; i++) {
       KLineEntity curPoint = data[i];
       if (curPoint == null) continue;
       KLineEntity lastPoint = i == 0 ? curPoint : data[i - 1];
       double curX = getX(i);
       double lastX = i == 0 ? curX : getX(i - 1);
-      renderer?.drawChart(lastPoint, curPoint, lastX, curX, size, canvas);
+      if (state is SingleMainChartState && state.extrapolation != null) {
+        final extrapolationStart = data.length - state.extrapolation.length;
+        if (i >= extrapolationStart) {
+          isExtrapolated = true;
+        }
+      }
+
+      renderer?.drawChart(
+        lastPoint,
+        curPoint,
+        lastX,
+        curX,
+        size,
+        canvas,
+        isExtrapolated ? Colors.deepPurple : null,
+      );
+    }
+
+    if (isExtrapolated) {
+      drawPoint(canvas, size, this.data.length - 1 - extrapolationLength,
+          drawVertical: false,
+          color: this.latestValueColor,
+          width: this.latestValueWidth);
     }
 
     if (this.showLatestValue) {
-      drawCrossLine(canvas, size, this.data.length - 1,
+      drawCrossLine(canvas, size, this.data.length - 1 - extrapolationLength,
           drawVertical: false,
           color: this.latestValueColor,
           width: this.latestValueWidth);
@@ -154,7 +195,8 @@ class SingleChartPainter extends SingleBaseChartPainter {
     canvas.restore();
 
     if (this.showLatestValue) {
-      drawCrossLineTextFor(canvas, size, this.data.length - 1,
+      drawCrossLineTextFor(
+          canvas, size, this.data.length - 1 - extrapolationLength,
           drawDate: false,
           tagColor: this.latestValueColor,
           textColor: this.latestValueTextColor);
@@ -231,15 +273,17 @@ class SingleChartPainter extends SingleBaseChartPainter {
     canvas.save();
     KLineEntity point = getItem(index);
 
-    TextPainter tp =
-        getTextPainter(targetPrice ?? point.close, textColor ?? Colors.white);
+    TextPainter tp = getTextPainter(
+        (targetPrice ?? this.state.getValue(point))
+            .toStringAsFixed(this.fixedLength),
+        textColor ?? Colors.white);
     double textHeight = tp.height;
     double textWidth = tp.width;
 
     double w1 = 5;
     double w2 = 3;
     double r = textHeight / 2 + w2;
-    double y = getMainY(targetPrice ?? point.close);
+    double y = getMainY(targetPrice ?? this.state.getValue(point));
     double x;
     bool isLeft = false;
     final selectPointPaint = Paint()
@@ -375,7 +419,7 @@ class SingleChartPainter extends SingleBaseChartPainter {
     KLineEntity point = getItem(index);
 
     double x = getX(index);
-    double y = getMainY(targetPrice ?? point.close);
+    double y = getMainY(targetPrice ?? this.state.getValue(point));
 
     if (y < this.mTopPadding) {
       y = this.mTopPadding;
@@ -406,6 +450,36 @@ class SingleChartPainter extends SingleBaseChartPainter {
           Offset(-mTranslateX + mWidth / scaleX, y), paintX);
       if (targetPrice == null) canvas.drawCircle(Offset(x, y), 2.0, paintX);
     }
+  }
+
+  void drawPoint(
+    Canvas canvas,
+    Size size,
+    int index, {
+    bool drawVertical = true,
+    Color color,
+    double width,
+    double targetPrice,
+  }) {
+    //var index = calculateSelectedX(selectX);
+    KLineEntity point = getItem(index);
+
+    double x = getX(index);
+    double y = getMainY(targetPrice ?? this.state.getValue(point));
+
+    if (y < this.mTopPadding) {
+      y = this.mTopPadding;
+    }
+
+    if (y > size.height) {
+      y = size.height - this.mBottomPadding;
+    }
+
+    Paint paintX = Paint()
+      ..color = color ?? Colors.white
+      ..strokeWidth = width ?? ChartStyle.hCrossWidth
+      ..isAntiAlias = true;
+    canvas.drawCircle(Offset(x, y), 2.0, paintX);
   }
 
   TextPainter getTextPainter(text, [color = ChartColors.defaultTextColor]) {

@@ -80,13 +80,20 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
   }
 
   @override
-  void drawChart(CandleEntity lastPoint, CandleEntity curPoint, double lastX,
-      double curX, Size size, Canvas canvas) {
+  void drawChart(
+    CandleEntity lastPoint,
+    CandleEntity curPoint,
+    double lastX,
+    double curX,
+    Size size,
+    Canvas canvas, [
+    Color color,
+  ]) {
     if (isLine != true) {
       drawCandle(curPoint, canvas, curX);
     }
     if (isLine == true) {
-      drawPolyline(lastPoint.close, curPoint.close, canvas, lastX, curX);
+      drawPolyline(lastPoint.close, curPoint.close, canvas, lastX, curX, color);
     } else if (state == MainState.MA) {
       drawMaLine(lastPoint, curPoint, canvas, lastX, curX);
     } else if (state == MainState.BOLL) {
@@ -106,8 +113,14 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
     ..isAntiAlias = true;
 
   //画折线图
-  drawPolyline(double lastPrice, double curPrice, Canvas canvas, double lastX,
-      double curX) {
+  drawPolyline(
+    double lastPrice,
+    double curPrice,
+    Canvas canvas,
+    double lastX,
+    double curX, [
+    Color color,
+  ]) {
 //    drawLine(lastPrice + 100, curPrice + 100, canvas, lastX, curX, ChartColors.kLineColor);
     mLinePath ??= Path();
 
@@ -122,6 +135,10 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
     mLinePath.moveTo(lastX, getY(lastPrice));
     mLinePath.cubicTo((lastX + curX) / 2, getY(lastPrice), (lastX + curX) / 2,
         getY(curPrice), curX, getY(curPrice));
+
+    if (color != null) {
+      mLinePaint.color = color;
+    }
 
 //    //画阴影
     mLineFillShader ??= LinearGradient(

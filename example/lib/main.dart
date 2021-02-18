@@ -62,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
       initDepth(bids, asks);
     });
     final charts = [
-      SingleMainChartState(isLine: this.line, state: MainState.BOLL),
+      SingleMainChartState(isLine: true),
       // SingleVolChartState(renderMA: false),
       SingleSecondaryChartState(state: SecondaryState.VWAP),
     ];
@@ -165,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           states: this.states,
           order: this.order,
-          showLatestValue: true,
+          showLatestValue: false,
           latestValueColor: Colors.amber,
           latestValueTextColor: Colors.white,
           latestValueWidth: 2,
@@ -200,6 +200,14 @@ class _MyHomePageState extends State<MyHomePage> {
           .cast<KLineEntity>();
       DataUtil.calculate(data);
       showLoading = false;
+
+      this.states.forEach((k, v) {
+        if (v is SingleMainChartState) {
+          v.extrapolation =
+              data.getRange(data.length - 5, data.length).toList();
+        }
+      });
+
       setState(() {});
     }).catchError((_) {
       showLoading = false;

@@ -256,6 +256,7 @@ abstract class SingleBaseChartState<T> {
   bool get drawCrossLine => false;
   bool get drawMinMax => true;
 
+  double getValue(KLineEntity data);
   BaseChartRenderer<T> getRenderer(Rect rect, double maxValue, double minValue,
       double topPadding, int fixedLength);
 
@@ -265,6 +266,7 @@ abstract class SingleBaseChartState<T> {
 class SingleMainChartState extends SingleBaseChartState {
   MainState state;
   bool isLine;
+  List<KLineEntity> extrapolation;
   List<int> maDayList;
   Size _size;
   @override
@@ -274,15 +276,20 @@ class SingleMainChartState extends SingleBaseChartState {
   bool get drawCrossLine => true;
   bool get drawMinMax => !isLine;
 
-  SingleMainChartState(
-      {this.state = MainState.NONE,
-      this.isLine = false,
-      this.maDayList = const [5, 10, 20],
-      Size size})
-      : this._size = size;
+  SingleMainChartState({
+    this.state = MainState.NONE,
+    this.isLine = false,
+    this.maDayList = const [5, 10, 20],
+    this.extrapolation,
+    Size size,
+  }) : this._size = size;
 
-  SingleMainChartState copyWith(
-          {bool isLine, MainState state, List<int> maDayList, Size size}) =>
+  SingleMainChartState copyWith({
+    bool isLine,
+    MainState state,
+    List<int> maDayList,
+    Size size,
+  }) =>
       SingleMainChartState(
           isLine: isLine ?? this.isLine,
           size: size ?? this._size,
@@ -335,6 +342,9 @@ class SingleMainChartState extends SingleBaseChartState {
         isLine: this.isLine,
         maDayList: List.from(this.maDayList),
       );
+
+  @override
+  double getValue(KLineEntity data) => data.close;
 }
 
 class SingleSecondaryChartState extends SingleBaseChartState {
@@ -343,11 +353,17 @@ class SingleSecondaryChartState extends SingleBaseChartState {
   Size get size => this._size ?? Size(double.infinity, 150);
   @override
   set size(Size s) => this._size = s;
+  bool get drawCrossLine => state == SecondaryState.VWAP;
 
   SingleSecondaryChartState({
     this.state = SecondaryState.MACD,
     Size size,
   }) : _size = size;
+
+  @override
+  double getValue(KLineEntity data) {
+    return data.vwap;
+  }
 
   @override
   BaseChartRenderer getRenderer(Rect rect, double maxValue, double minValue,
@@ -422,4 +438,9 @@ class SingleVolChartState extends SingleBaseChartState {
   SingleBaseChartState clone() => SingleVolChartState(
         size: Size.copy(this.size),
       );
+
+  @override
+  double getValue(KLineEntity data) {
+    return data.amount;
+  }
 }
